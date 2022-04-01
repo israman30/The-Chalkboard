@@ -11,6 +11,7 @@ class MainController: UIViewController {
     
     let tableView: UITableView = {
         let tv = UITableView()
+        tv.alwaysBounceVertical = false
         return tv
     }()
     
@@ -23,18 +24,21 @@ class MainController: UIViewController {
     
     let addButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle("Add", for: .normal)
         btn.setTitleColor(UIColor.label, for: .normal)
-        btn.backgroundColor = .systemBlue
-        btn.frame = .init(x: 0, y: 0, width: 50, height: 50)
+        btn.backgroundColor = .systemGray4
+        btn.isEnabled = false
         return btn
     }()
+    
+    var isOpen = false
+    
+    var inputHeightConstrain: NSLayoutConstraint?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "The Chalkboard"
         navigationController?.navigationBar.prefersLargeTitles = true
-        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(add))
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(openInput))
         navigationItem.rightBarButtonItem?.tintColor = .label
         tableView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -45,20 +49,38 @@ class MainController: UIViewController {
         
         view.addSubview(tableView)
         view.addSubview(stackView)
+        
+        inputHeightConstrain?.constant = 50.0
+        
+        inputHeightConstrain = stackView.heightAnchor.constraint(equalToConstant: inputHeightConstrain?.constant ?? 0.0)
+        stackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor).isActive = true
+        stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor).isActive = true
+        addButton.setTitle("", for: .normal)
+        inputHeightConstrain?.isActive = true
         NSLayoutConstraint.activate([
-            stackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            stackView.heightAnchor.constraint(equalToConstant: 50),
-            
             tableView.topAnchor.constraint(equalTo: stackView.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
         ])
+        
     }
-    @objc func add() {
-        print("Added")
+    
+    @objc func openInput() {
+        print("Opened")
+        if isOpen == false {
+            isOpen = true
+            inputHeightConstrain?.constant = 50.0
+            addButton.setTitle("Add", for: .normal)
+        } else {
+            isOpen = false
+            inputHeightConstrain?.constant = 0.0
+            addButton.setTitle("", for: .normal)
+        }
+        UIView.animate(withDuration: 0.2, delay: 0.2) {
+            self.view.layoutIfNeeded()
+        }
     }
 
 }
