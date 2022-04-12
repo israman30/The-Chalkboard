@@ -11,6 +11,29 @@ extension UIColor {
     static var greenColor = UIColor(red: 77/255, green: 125/255, blue: 90/255, alpha: 1)
 }
 
+extension UITextField {
+    func makeFontDynamic() {
+        let customFont = UIFont.preferredFont(forTextStyle: .title3).pointSize
+        font = UIFont(name: "GillSans-Italic", size: customFont)
+        adjustsFontSizeToFitWidth = true
+    }
+    
+    func makePlaeceholderDynamic(string: String) {
+        let customFont = UIFont.preferredFont(forTextStyle: .title3).pointSize
+        attributedPlaceholder = NSAttributedString(string: string, attributes: [NSAttributedString.Key.font: UIFont(name: "GillSans-Italic", size: customFont)!])
+        adjustsFontForContentSizeCategory = true
+        adjustsFontSizeToFitWidth = true
+        isAccessibilityElement = true
+    }
+}
+
+extension UILabel {
+    func makeFontDynamic() {
+        let customFont = UIFont.preferredFont(forTextStyle: .title3).pointSize
+        font = UIFont(name: "GillSans-Italic", size: customFont)
+        adjustsFontSizeToFitWidth = true
+    }
+}
 
 
 class MainController: UIViewController {
@@ -25,6 +48,8 @@ class MainController: UIViewController {
         let tf = UITextField()
         tf.placeholder = "Enter something.."
         tf.textColor = .label
+        tf.makeFontDynamic()
+//        tf.makePlaeceholderDynamic(string: "Enter something")
         return tf
     }()
     
@@ -37,6 +62,8 @@ class MainController: UIViewController {
         btn.layer.cornerRadius = 2
         return btn
     }()
+    
+    var items = [String]()
     
     var isOpen = false
     
@@ -93,7 +120,12 @@ class MainController: UIViewController {
     }
     
     @objc func add() {
-        print(textField.text ?? "")
+        guard let inputText = textField.text else { return }
+        print(inputText)
+        textField.text = ""
+        items.append(inputText)
+        print(items)
+        tableView.reloadData()
     }
     
     @objc func openInput() {
@@ -106,7 +138,7 @@ class MainController: UIViewController {
             inputHeightConstrain?.constant = 0.0
             addButton.setTitle("", for: .normal)
         }
-        UIView.animate(withDuration: 0.2, delay: 0.2) {
+        UIView.animate(withDuration: 0.2, delay: 0.0) {
             self.view.layoutIfNeeded()
         }
     }
@@ -115,12 +147,12 @@ class MainController: UIViewController {
 extension MainController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 5
+        return items.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.textLabel?.text = "Hello"
+        cell.textLabel?.text = items[indexPath.row]
         return cell
     }
     
