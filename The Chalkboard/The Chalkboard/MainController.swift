@@ -7,35 +7,6 @@
 
 import UIKit
 
-extension UIColor {
-    static var greenColor = UIColor(red: 77/255, green: 125/255, blue: 90/255, alpha: 1)
-}
-
-extension UITextField {
-    func makeFontDynamic() {
-        let customFont = UIFont.preferredFont(forTextStyle: .title3).pointSize
-        font = UIFont(name: "GillSans-Italic", size: customFont)
-        adjustsFontSizeToFitWidth = true
-    }
-    
-    func makePlaeceholderDynamic(string: String) {
-        let customFont = UIFont.preferredFont(forTextStyle: .title3).pointSize
-        attributedPlaceholder = NSAttributedString(string: string, attributes: [NSAttributedString.Key.font: UIFont(name: "GillSans-Italic", size: customFont)!])
-        adjustsFontForContentSizeCategory = true
-        adjustsFontSizeToFitWidth = true
-        isAccessibilityElement = true
-    }
-}
-
-extension UILabel {
-    func makeFontDynamic() {
-        let customFont = UIFont.preferredFont(forTextStyle: .title3).pointSize
-        font = UIFont(name: "GillSans-Italic", size: customFont)
-        adjustsFontSizeToFitWidth = true
-    }
-}
-
-
 class MainController: UIViewController {
     
     let tableView: UITableView = {
@@ -49,7 +20,6 @@ class MainController: UIViewController {
         tf.placeholder = "Enter something.."
         tf.textColor = .label
         tf.makeFontDynamic()
-//        tf.makePlaeceholderDynamic(string: "Enter something")
         return tf
     }()
     
@@ -72,38 +42,10 @@ class MainController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "The Chalkboard"
-        navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(openInput))
-        navigationItem.rightBarButtonItem?.tintColor = .label
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
         textField.addTarget(self, action: #selector(input), for: .editingChanged)
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        tableView.delegate = self
-        tableView.dataSource = self
-        
-        let stackView = UIStackView(arrangedSubviews: [textField, addButton])
-        stackView.distribution = .fillProportionally
-        stackView.axis = .horizontal
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(tableView)
-        view.addSubview(stackView)
-        
-        inputHeightConstrain?.constant = 50.0
-        
-        inputHeightConstrain = stackView.heightAnchor.constraint(equalToConstant: inputHeightConstrain?.constant ?? 0.0)
-        stackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor).isActive = true
-        stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10).isActive = true
-        stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10).isActive = true
-        
-        inputHeightConstrain?.isActive = true
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: stackView.bottomAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-        ])
+        setMainUI()
     }
     
     @objc func input() {
@@ -144,15 +86,21 @@ class MainController: UIViewController {
     }
 
 }
+
+enum Cell: String {
+    case mainCell = "cell"
+}
+
 extension MainController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return items.count
+        return 5
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.textLabel?.text = items[indexPath.row]
+        let cell = tableView.dequeueReusableCell(withIdentifier: Cell.mainCell.rawValue, for: indexPath) as! MainCell
+//        cell.textLabel?.text = items[indexPath.row]
+        cell.titleLabel.text = "Test"
         return cell
     }
     
@@ -160,4 +108,46 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
         return UITableView.automaticDimension
     }
     
+}
+
+class MainCell: UITableViewCell {
+    
+    let titleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Test"
+        return label
+    }()
+    
+    private let dateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "10/10/1001"
+        return label
+    }()
+    
+    func configure(items: String) {
+        
+    }
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        
+        addSubview(titleLabel)
+        addSubview(dateLabel)
+        
+        NSLayoutConstraint.activate([
+            titleLabel.leftAnchor.constraint(equalTo: leftAnchor),
+            titleLabel.rightAnchor.constraint(equalTo: rightAnchor),
+            titleLabel.topAnchor.constraint(equalTo: topAnchor),
+            titleLabel.bottomAnchor.constraint(equalTo: dateLabel.topAnchor),
+            
+            dateLabel.leftAnchor.constraint(equalTo: titleLabel.leftAnchor),
+            dateLabel.rightAnchor.constraint(equalTo: titleLabel.rightAnchor),
+            dateLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
+            dateLabel.heightAnchor.constraint(equalToConstant: 30)
+        ])
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 }
