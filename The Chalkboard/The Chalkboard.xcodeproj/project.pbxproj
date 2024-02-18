@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4D0943DD29BD7BA600C40E27 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0943DC29BD7BA600C40E27 /* MainView.swift */; };
+		4D0943E029BD7C0900C40E27 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0943DF29BD7C0900C40E27 /* Utils.swift */; };
 		8DC5720327F3FBF500533FF7 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC5720227F3FBF500533FF7 /* AppDelegate.swift */; };
 		8DC5720527F3FBF500533FF7 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC5720427F3FBF500533FF7 /* SceneDelegate.swift */; };
 		8DC5720727F3FBF500533FF7 /* MainController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC5720627F3FBF500533FF7 /* MainController.swift */; };
@@ -36,6 +38,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4D0943DC29BD7BA600C40E27 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		4D0943DF29BD7C0900C40E27 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		8DC571FF27F3FBF500533FF7 /* The Chalkboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Chalkboard.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DC5720227F3FBF500533FF7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8DC5720427F3FBF500533FF7 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -76,6 +80,24 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4D0943DE29BD7BD200C40E27 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				8DC5720D27F3FBF800533FF7 /* LaunchScreen.storyboard */,
+				8DC5720827F3FBF500533FF7 /* Main.storyboard */,
+				4D0943DC29BD7BA600C40E27 /* MainView.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		4D0943E129BD7C2200C40E27 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				4D0943DF29BD7C0900C40E27 /* Utils.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
 		8DC571F627F3FBF500533FF7 = {
 			isa = PBXGroup;
 			children = (
@@ -99,12 +121,12 @@
 		8DC5720127F3FBF500533FF7 /* The Chalkboard */ = {
 			isa = PBXGroup;
 			children = (
-				8DC5720227F3FBF500533FF7 /* AppDelegate.swift */,
 				8DC5720427F3FBF500533FF7 /* SceneDelegate.swift */,
+				8DC5720227F3FBF500533FF7 /* AppDelegate.swift */,
+				4D0943E129BD7C2200C40E27 /* Utils */,
+				4D0943DE29BD7BD200C40E27 /* View */,
 				8DC5720627F3FBF500533FF7 /* MainController.swift */,
-				8DC5720827F3FBF500533FF7 /* Main.storyboard */,
 				8DC5720B27F3FBF800533FF7 /* Assets.xcassets */,
-				8DC5720D27F3FBF800533FF7 /* LaunchScreen.storyboard */,
 				8DC5721027F3FBF800533FF7 /* Info.plist */,
 			);
 			path = "The Chalkboard";
@@ -258,7 +280,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4D0943E029BD7C0900C40E27 /* Utils.swift in Sources */,
 				8DC5720727F3FBF500533FF7 /* MainController.swift in Sources */,
+				4D0943DD29BD7BA600C40E27 /* MainView.swift in Sources */,
 				8DC5720327F3FBF500533FF7 /* AppDelegate.swift in Sources */,
 				8DC5720527F3FBF500533FF7 /* SceneDelegate.swift in Sources */,
 			);
