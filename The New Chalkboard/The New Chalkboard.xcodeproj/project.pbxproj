@@ -12,6 +12,7 @@
 		4D7B926F2B81933300CC07B9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4D7B926E2B81933300CC07B9 /* Assets.xcassets */; };
 		4D7B92722B81933300CC07B9 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4D7B92712B81933300CC07B9 /* Preview Assets.xcassets */; };
 		4D7B92792B81937800CC07B9 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B92782B81937800CC07B9 /* MainView.swift */; };
+		4D7B927B2B8196FA00CC07B9 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B927A2B8196FA00CC07B9 /* HomeView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +22,7 @@
 		4D7B926E2B81933300CC07B9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		4D7B92712B81933300CC07B9 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		4D7B92782B81937800CC07B9 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		4D7B927A2B8196FA00CC07B9 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +58,7 @@
 				4D7B926A2B81933200CC07B9 /* The_New_ChalkboardApp.swift */,
 				4D7B926C2B81933200CC07B9 /* ContentView.swift */,
 				4D7B92782B81937800CC07B9 /* MainView.swift */,
+				4D7B927A2B8196FA00CC07B9 /* HomeView.swift */,
 				4D7B926E2B81933300CC07B9 /* Assets.xcassets */,
 				4D7B92702B81933300CC07B9 /* Preview Content */,
 			);
@@ -141,6 +144,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D7B926D2B81933200CC07B9 /* ContentView.swift in Sources */,
+				4D7B927B2B8196FA00CC07B9 /* HomeView.swift in Sources */,
 				4D7B92792B81937800CC07B9 /* MainView.swift in Sources */,
 				4D7B926B2B81933200CC07B9 /* The_New_ChalkboardApp.swift in Sources */,
 			);
