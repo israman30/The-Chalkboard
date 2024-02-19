@@ -31,14 +31,14 @@ class TagsViewModel: ObservableObject {
         let tagSpacing: CGFloat = 14 + 30 + 6 + 5
         
         if !tags.isEmpty {
-            for index in  0..<tags.count {
+            for index in 0..<tags.count {
                 tags[index].size = tags[index].name.getSize()
             }
             
             tags.forEach { tag in
                 totalWidth += (tag.size + tagSpacing)
                 
-                if totalWidth > screenWidth{
+                if totalWidth > screenWidth {
                     totalWidth = (tag.size + tagSpacing)
                     rows.append(currentRow)
                     currentRow.removeAll()
@@ -60,12 +60,12 @@ class TagsViewModel: ObservableObject {
     }
     
     func addTag() {
-        tags.append(TagModel(name: tagInputText))
-        tagInputText = ""
+        let newTag = TagModel(name: tagInputText)
+        tags.append(newTag)
         getTags()
     }
     
-    func removeTag(by id: String){
+    func removeTag(by id: String) {
         tags = tags.filter { $0.id != id }
         getTags()
     }

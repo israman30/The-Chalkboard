@@ -15,6 +15,7 @@ struct TagView: View {
         VStack {
             Text(row.name)
                 .font(.system(size: 16))
+                .fontWeight(.light)
                 .padding(.leading, 14)
                 .padding(.trailing, 30)
                 .padding(.vertical, 8)
@@ -22,12 +23,12 @@ struct TagView: View {
                     ZStack(alignment: .trailing) {
                         Capsule()
                             .fill(.gray.opacity(0.3))
-                        Button{
+                        Button {
                             viewModel.removeTag(by: row.id)
-                        } label:{
+                        } label: {
                             Image(systemName: "xmark")
-                                .frame(width: 15, height: 15)
-                                .padding(.trailing, 8)
+                                .font(.system(size: 18))
+                                .padding(.horizontal, 8)
                                 .foregroundColor(.red)
                         }
                     }

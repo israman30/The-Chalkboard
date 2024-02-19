@@ -34,7 +34,7 @@ struct HomeView: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(viewModel.rows, id:\.self) { rows in
-                        HStack(spacing: 6){
+                        HStack(spacing: 6) {
                             ForEach(rows) { row in
                                 TagView(row: row, viewModel: viewModel)
                             }
@@ -54,3 +54,4 @@ struct HomeView: View {
 #Preview {
     HomeView()
 }
+
