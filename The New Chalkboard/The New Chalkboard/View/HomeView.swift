@@ -9,7 +9,11 @@ import SwiftUI
 
 struct HomeView: View {
     
-    @StateObject var viewModel = TagsViewModel()
+    @StateObject private var viewModel: TagsViewModel
+    
+    init() {
+        self._viewModel = StateObject(wrappedValue: TagsViewModel())
+    }
     
     var body: some View {
         NavigationView  {
