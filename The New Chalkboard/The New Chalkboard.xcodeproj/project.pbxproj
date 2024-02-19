@@ -16,6 +16,7 @@
 		4D7B927E2B82DAE600CC07B9 /* TagModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B927D2B82DAE600CC07B9 /* TagModel.swift */; };
 		4D7B92822B82DB2100CC07B9 /* TagsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B92812B82DB2100CC07B9 /* TagsViewModel.swift */; };
 		4D7B92852B82DB4000CC07B9 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B92842B82DB4000CC07B9 /* Util.swift */; };
+		4D7B92872B82DE5F00CC07B9 /* TagView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B92862B82DE5F00CC07B9 /* TagView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +30,7 @@
 		4D7B927D2B82DAE600CC07B9 /* TagModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagModel.swift; sourceTree = "<group>"; };
 		4D7B92812B82DB2100CC07B9 /* TagsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsViewModel.swift; sourceTree = "<group>"; };
 		4D7B92842B82DB4000CC07B9 /* Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
+		4D7B92862B82DE5F00CC07B9 /* TagView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +95,7 @@
 			isa = PBXGroup;
 			children = (
 				4D7B927A2B8196FA00CC07B9 /* HomeView.swift */,
+				4D7B92862B82DE5F00CC07B9 /* TagView.swift */,
 				4D7B92782B81937800CC07B9 /* MainView.swift */,
 			);
 			path = View;
@@ -191,6 +194,7 @@
 				4D7B92852B82DB4000CC07B9 /* Util.swift in Sources */,
 				4D7B92792B81937800CC07B9 /* MainView.swift in Sources */,
 				4D7B926B2B81933200CC07B9 /* The_New_ChalkboardApp.swift in Sources */,
+				4D7B92872B82DE5F00CC07B9 /* TagView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
