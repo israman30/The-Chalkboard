@@ -13,6 +13,9 @@
 		4D7B92722B81933300CC07B9 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4D7B92712B81933300CC07B9 /* Preview Assets.xcassets */; };
 		4D7B92792B81937800CC07B9 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B92782B81937800CC07B9 /* MainView.swift */; };
 		4D7B927B2B8196FA00CC07B9 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B927A2B8196FA00CC07B9 /* HomeView.swift */; };
+		4D7B927E2B82DAE600CC07B9 /* TagModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B927D2B82DAE600CC07B9 /* TagModel.swift */; };
+		4D7B92822B82DB2100CC07B9 /* TagsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B92812B82DB2100CC07B9 /* TagsViewModel.swift */; };
+		4D7B92852B82DB4000CC07B9 /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7B92842B82DB4000CC07B9 /* Util.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,6 +26,9 @@
 		4D7B92712B81933300CC07B9 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		4D7B92782B81937800CC07B9 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		4D7B927A2B8196FA00CC07B9 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		4D7B927D2B82DAE600CC07B9 /* TagModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagModel.swift; sourceTree = "<group>"; };
+		4D7B92812B82DB2100CC07B9 /* TagsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagsViewModel.swift; sourceTree = "<group>"; };
+		4D7B92842B82DB4000CC07B9 /* Util.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,8 +63,10 @@
 			children = (
 				4D7B926A2B81933200CC07B9 /* The_New_ChalkboardApp.swift */,
 				4D7B926C2B81933200CC07B9 /* ContentView.swift */,
-				4D7B92782B81937800CC07B9 /* MainView.swift */,
-				4D7B927A2B8196FA00CC07B9 /* HomeView.swift */,
+				4D7B92832B82DB3400CC07B9 /* Utils */,
+				4D7B92802B82DB1100CC07B9 /* ViewModel */,
+				4D7B927F2B82DAFB00CC07B9 /* View */,
+				4D7B927C2B82DAD700CC07B9 /* Model */,
 				4D7B926E2B81933300CC07B9 /* Assets.xcassets */,
 				4D7B92702B81933300CC07B9 /* Preview Content */,
 			);
@@ -71,6 +79,39 @@
 				4D7B92712B81933300CC07B9 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		4D7B927C2B82DAD700CC07B9 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				4D7B927D2B82DAE600CC07B9 /* TagModel.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		4D7B927F2B82DAFB00CC07B9 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				4D7B927A2B8196FA00CC07B9 /* HomeView.swift */,
+				4D7B92782B81937800CC07B9 /* MainView.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		4D7B92802B82DB1100CC07B9 /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				4D7B92812B82DB2100CC07B9 /* TagsViewModel.swift */,
+			);
+			path = ViewModel;
+			sourceTree = "<group>";
+		};
+		4D7B92832B82DB3400CC07B9 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				4D7B92842B82DB4000CC07B9 /* Util.swift */,
+			);
+			path = Utils;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -144,7 +185,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D7B926D2B81933200CC07B9 /* ContentView.swift in Sources */,
+				4D7B92822B82DB2100CC07B9 /* TagsViewModel.swift in Sources */,
 				4D7B927B2B8196FA00CC07B9 /* HomeView.swift in Sources */,
+				4D7B927E2B82DAE600CC07B9 /* TagModel.swift in Sources */,
+				4D7B92852B82DB4000CC07B9 /* Util.swift in Sources */,
 				4D7B92792B81937800CC07B9 /* MainView.swift in Sources */,
 				4D7B926B2B81933200CC07B9 /* The_New_ChalkboardApp.swift in Sources */,
 			);
