@@ -21,14 +21,15 @@ struct HomeView: View {
                 TextField("Enter tag", text: $viewModel.tagInputText, onCommit: {
                     viewModel.addTag()
                 })
+                .font(.title2)
                 .onSubmit {
                     viewModel.tagInputText = ""
                 }
                 .padding()
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: 5)
                         .strokeBorder()
-                        .foregroundColor(.black)
+                        .foregroundColor(Color(.systemGray4))
                 )
                 .padding()
                 
