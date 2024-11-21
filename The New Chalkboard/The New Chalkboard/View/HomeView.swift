@@ -9,29 +9,12 @@ import SwiftUI
 
 struct HomeView: View {
     
-    @StateObject private var viewModel: TagsViewModel
-    
-    init() {
-        self._viewModel = StateObject(wrappedValue: TagsViewModel())
-    }
+    @StateObject private var viewModel = TagsViewModel()
     
     var body: some View {
         NavigationView  {
             VStack {
-                TextField("Enter tag", text: $viewModel.tagInputText, onCommit: {
-                    viewModel.addTag()
-                })
-                .font(.title2)
-                .onSubmit {
-                    viewModel.tagInputText = ""
-                }
-                .padding()
-                .overlay(
-                    RoundedRectangle(cornerRadius: 5)
-                        .strokeBorder()
-                        .foregroundColor(Color(.systemGray4))
-                )
-                .padding()
+                TagTextEditor(viewModel: viewModel)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(viewModel.rows, id:\.self) { rows in
@@ -56,3 +39,22 @@ struct HomeView: View {
     HomeView()
 }
 
+struct TagTextEditor: View {
+    @State var viewModel: TagsViewModel
+    var body: some View {
+        TextField("Enter tag", text: $viewModel.tagInputText, onCommit: {
+            viewModel.addTag()
+        })
+        .font(.title2)
+        .onSubmit {
+            viewModel.tagInputText = ""
+        }
+        .padding()
+        .overlay(
+            RoundedRectangle(cornerRadius: 5)
+                .strokeBorder()
+                .foregroundColor(Color(.systemGray4))
+        )
+        .padding()
+    }
+}
