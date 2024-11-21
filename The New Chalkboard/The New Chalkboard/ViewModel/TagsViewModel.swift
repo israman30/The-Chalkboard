@@ -7,7 +7,16 @@
 
 import SwiftUI
 
-class TagsViewModel: ObservableObject {
+protocol TagsProtocol: ObservableObject {
+    var rows: [[TagModel]] { get set }
+    var tags: [TagModel] { get set }
+    var tagInputText: String { get set }
+    func getTags()
+    func addTag()
+    func removeTag(by id: String)
+}
+
+class TagsViewModel: TagsProtocol {
     
     @Published var rows: [[TagModel]] = []
     @Published var tags: [TagModel] = []
@@ -24,7 +33,7 @@ class TagsViewModel: ObservableObject {
     }
     
     func getTags() {
-        var rows: [[TagModel]] = []
+        var addedRows: [[TagModel]] = []
         var currentRow: [TagModel] = []
         var totalWidth: CGFloat = 0
         let screenWidth = UIScreen.screenWidth - 10
@@ -40,7 +49,7 @@ class TagsViewModel: ObservableObject {
                 
                 if totalWidth > screenWidth {
                     totalWidth = (tag.size + tagSpacing)
-                    rows.append(currentRow)
+                    addedRows.append(currentRow)
                     currentRow.removeAll()
                     currentRow.append(tag)
                 } else {
@@ -49,13 +58,13 @@ class TagsViewModel: ObservableObject {
             }
             
             if !currentRow.isEmpty {
-                rows.append(currentRow)
+                addedRows.append(currentRow)
                 currentRow.removeAll()
             }
             
-            self.rows = rows
+            self.rows = addedRows
         } else {
-            rows = []
+            addedRows = []
         }
     }
     
