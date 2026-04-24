@@ -7,6 +7,11 @@
 
 import UIKit
 
+struct ChalkboardItem: Equatable {
+    let text: String
+    var date: Date
+}
+
 class MainController: UIViewController {
     
     let tableView: UITableView = {
@@ -33,7 +38,7 @@ class MainController: UIViewController {
         return btn
     }()
     
-    var items = [String]()
+    var items = [ChalkboardItem]()
     
     var isOpen = false
     
@@ -67,18 +72,27 @@ class MainController: UIViewController {
         let inputText = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !inputText.isEmpty else { return }
 
-        textField.text = ""
-        input()
+        view.endEditing(true)
 
-        let newIndex = items.count
-        items.append(inputText)
+        presentDatePicker(
+            title: "Date added",
+            initialDate: Date()
+        ) { [weak self] selectedDate in
+            guard let self else { return }
 
-        let indexPath = IndexPath(row: newIndex, section: 0)
-        DispatchQueue.main.async {
-            self.tableView.performBatchUpdates {
-                self.tableView.insertRows(at: [indexPath], with: .automatic)
-            } completion: { _ in
-                self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+            self.textField.text = ""
+            self.input()
+
+            let newIndex = self.items.count
+            self.items.append(ChalkboardItem(text: inputText, date: selectedDate))
+
+            let indexPath = IndexPath(row: newIndex, section: 0)
+            DispatchQueue.main.async {
+                self.tableView.performBatchUpdates {
+                    self.tableView.insertRows(at: [indexPath], with: .automatic)
+                } completion: { _ in
+                    self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+                }
             }
         }
     }
@@ -112,12 +126,26 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: Cell.mainCell.rawValue, for: indexPath) as! MainCell
-        cell.configure(item: items[indexPath.row])
+        cell.bind(items[indexPath.row])
         return cell
     }
     
     func tableView(_ tableView: UITableView, estimatedHeightForFooterInSection section: Int) -> CGFloat {
         return UITableView.automaticDimension
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+
+        let item = items[indexPath.row]
+        presentDatePicker(
+            title: "Update date added",
+            initialDate: item.date
+        ) { [weak self] selectedDate in
+            guard let self else { return }
+            self.items[indexPath.row].date = selectedDate
+            self.tableView.reloadRows(at: [indexPath], with: .automatic)
+        }
     }
     
 }
@@ -134,17 +162,26 @@ class MainCell: UITableViewCell {
     
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.text = "10/10/1001"
+        label.text = ""
         label.textColor = .secondaryLabel
         return label
     }()
     
-    func configure(item: String) {
-        titleLabel.text = item
+    private static let dateFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateStyle = .medium
+        df.timeStyle = .none
+        return df
+    }()
+    
+    func bind(_ item: ChalkboardItem) {
+        titleLabel.text = item.text
+        dateLabel.text = "Date added: \(Self.dateFormatter.string(from: item.date))"
     }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        selectionStyle = .default
         
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -166,5 +203,99 @@ class MainCell: UITableViewCell {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+}
+
+private extension MainController {
+    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date) -> Void) {
+        let pickerVC = DatePickerSheetViewController(
+            titleText: title,
+            initialDate: initialDate,
+            onPick: onPick
+        )
+        pickerVC.modalPresentationStyle = .pageSheet
+        if #available(iOS 15.0, *) {
+            if let sheet = pickerVC.sheetPresentationController {
+                sheet.detents = [.medium()]
+                sheet.prefersGrabberVisible = true
+            }
+        }
+        present(pickerVC, animated: true)
+    }
+}
+
+private final class DatePickerSheetViewController: UIViewController {
+    private let titleText: String
+    private let initialDate: Date
+    private let onPick: (Date) -> Void
+
+    private let titleLabel = UILabel()
+    private let datePicker = UIDatePicker()
+    private let cancelButton = UIButton(type: .system)
+    private let doneButton = UIButton(type: .system)
+
+    init(titleText: String, initialDate: Date, onPick: @escaping (Date) -> Void) {
+        self.titleText = titleText
+        self.initialDate = initialDate
+        self.onPick = onPick
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        view.backgroundColor = .systemBackground
+
+        titleLabel.text = titleText
+        titleLabel.font = .preferredFont(forTextStyle: .headline)
+        titleLabel.textAlignment = .center
+        titleLabel.numberOfLines = 2
+
+        datePicker.datePickerMode = .date
+        if #available(iOS 14.0, *) {
+            datePicker.preferredDatePickerStyle = .inline
+        }
+        datePicker.date = initialDate
+
+        cancelButton.setTitle("Cancel", for: .normal)
+        cancelButton.addTarget(self, action: #selector(didTapCancel), for: .touchUpInside)
+
+        doneButton.setTitle("Done", for: .normal)
+        doneButton.titleLabel?.font = .preferredFont(forTextStyle: .headline)
+        doneButton.addTarget(self, action: #selector(didTapDone), for: .touchUpInside)
+
+        let buttons = UIStackView(arrangedSubviews: [cancelButton, doneButton])
+        buttons.axis = .horizontal
+        buttons.distribution = .fillEqually
+        buttons.spacing = 12
+
+        let stack = UIStackView(arrangedSubviews: [titleLabel, datePicker, buttons])
+        stack.axis = .vertical
+        stack.spacing = 12
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        view.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
+        ])
+    }
+
+    @objc private func didTapCancel() {
+        dismiss(animated: true)
+    }
+
+    @objc private func didTapDone() {
+        let picked = datePicker.date
+        dismiss(animated: true) { [onPick] in
+            onPick(picked)
+        }
     }
 }
