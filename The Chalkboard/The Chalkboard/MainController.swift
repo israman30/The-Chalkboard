@@ -46,6 +46,7 @@ class MainController: UIViewController {
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
         textField.addTarget(self, action: #selector(input), for: .editingChanged)
         setMainUI()
+        tableView.reloadData()
     }
     
     @objc func input() {
@@ -62,12 +63,24 @@ class MainController: UIViewController {
     }
     
     @objc func add() {
-        guard let inputText = textField.text else { return }
-        print(inputText)
+        let rawText = textField.text ?? ""
+        let inputText = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !inputText.isEmpty else { return }
+
         textField.text = ""
+        input()
+
+        let newIndex = items.count
         items.append(inputText)
-        print(items)
-        tableView.reloadData()
+
+        let indexPath = IndexPath(row: newIndex, section: 0)
+        DispatchQueue.main.async {
+            self.tableView.performBatchUpdates {
+                self.tableView.insertRows(at: [indexPath], with: .automatic)
+            } completion: { _ in
+                self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+            }
+        }
     }
     
     @objc func openInput() {
@@ -94,13 +107,12 @@ enum Cell: String {
 extension MainController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 5
+        return items.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: Cell.mainCell.rawValue, for: indexPath) as! MainCell
-//        cell.textLabel?.text = items[indexPath.row]
-        cell.titleLabel.text = "Test"
+        cell.configure(item: items[indexPath.row])
         return cell
     }
     
@@ -115,35 +127,40 @@ class MainCell: UITableViewCell {
     let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "Test"
+        label.numberOfLines = 0
+        label.makeFontDynamic()
         return label
     }()
     
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.text = "10/10/1001"
+        label.textColor = .secondaryLabel
         return label
     }()
     
-    func configure(items: String) {
-        
+    func configure(item: String) {
+        titleLabel.text = item
     }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        addSubview(titleLabel)
-        addSubview(dateLabel)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        dateLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        contentView.addSubview(titleLabel)
+        contentView.addSubview(dateLabel)
         
         NSLayoutConstraint.activate([
-            titleLabel.leftAnchor.constraint(equalTo: leftAnchor),
-            titleLabel.rightAnchor.constraint(equalTo: rightAnchor),
-            titleLabel.topAnchor.constraint(equalTo: topAnchor),
-            titleLabel.bottomAnchor.constraint(equalTo: dateLabel.topAnchor),
+            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
             
-            dateLabel.leftAnchor.constraint(equalTo: titleLabel.leftAnchor),
-            dateLabel.rightAnchor.constraint(equalTo: titleLabel.rightAnchor),
-            dateLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
-            dateLabel.heightAnchor.constraint(equalToConstant: 30)
+            dateLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
+            dateLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
+            dateLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
+            dateLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12)
         ])
     }
     

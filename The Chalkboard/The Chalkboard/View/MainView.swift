@@ -18,6 +18,9 @@ extension MainController {
         tableView.register(MainCell.self, forCellReuseIdentifier: Cell.mainCell.rawValue)
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 70
+        tableView.keyboardDismissMode = .onDrag
         
         let stackView = UIStackView(arrangedSubviews: [textField, addButton])
         stackView.distribution = .fillProportionally
@@ -27,9 +30,7 @@ extension MainController {
         view.addSubview(tableView)
         view.addSubview(stackView)
         
-        inputHeightConstrain?.constant = 50.0
-        
-        inputHeightConstrain = stackView.heightAnchor.constraint(equalToConstant: inputHeightConstrain?.constant ?? 0.0)
+        inputHeightConstrain = stackView.heightAnchor.constraint(equalToConstant: 0.0)
         stackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor).isActive = true
         stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10).isActive = true
         stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10).isActive = true
