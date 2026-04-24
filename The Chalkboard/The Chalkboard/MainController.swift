@@ -126,7 +126,7 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: Cell.mainCell.rawValue, for: indexPath) as! MainCell
-        cell.configure(item: items[indexPath.row])
+        cell.bind(items[indexPath.row])
         return cell
     }
     
@@ -174,7 +174,7 @@ class MainCell: UITableViewCell {
         return df
     }()
     
-    func configure(item: ChalkboardItem) {
+    func bind(_ item: ChalkboardItem) {
         titleLabel.text = item.text
         dateLabel.text = "Date added: \(Self.dateFormatter.string(from: item.date))"
     }
@@ -208,39 +208,94 @@ class MainCell: UITableViewCell {
 
 private extension MainController {
     func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date) -> Void) {
-        let alert = UIAlertController(title: title, message: "\n\n\n\n\n\n\n\n", preferredStyle: .actionSheet)
+        let pickerVC = DatePickerSheetViewController(
+            titleText: title,
+            initialDate: initialDate,
+            onPick: onPick
+        )
+        pickerVC.modalPresentationStyle = .pageSheet
+        if #available(iOS 15.0, *) {
+            if let sheet = pickerVC.sheetPresentationController {
+                sheet.detents = [.medium()]
+                sheet.prefersGrabberVisible = true
+            }
+        }
+        present(pickerVC, animated: true)
+    }
+}
 
-        let datePicker = UIDatePicker()
+private final class DatePickerSheetViewController: UIViewController {
+    private let titleText: String
+    private let initialDate: Date
+    private let onPick: (Date) -> Void
+
+    private let titleLabel = UILabel()
+    private let datePicker = UIDatePicker()
+    private let cancelButton = UIButton(type: .system)
+    private let doneButton = UIButton(type: .system)
+
+    init(titleText: String, initialDate: Date, onPick: @escaping (Date) -> Void) {
+        self.titleText = titleText
+        self.initialDate = initialDate
+        self.onPick = onPick
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        view.backgroundColor = .systemBackground
+
+        titleLabel.text = titleText
+        titleLabel.font = .preferredFont(forTextStyle: .headline)
+        titleLabel.textAlignment = .center
+        titleLabel.numberOfLines = 2
+
         datePicker.datePickerMode = .date
-        datePicker.preferredDatePickerStyle = .wheels
+        if #available(iOS 14.0, *) {
+            datePicker.preferredDatePickerStyle = .inline
+        }
         datePicker.date = initialDate
-        datePicker.translatesAutoresizingMaskIntoConstraints = false
 
-        alert.view.addSubview(datePicker)
+        cancelButton.setTitle("Cancel", for: .normal)
+        cancelButton.addTarget(self, action: #selector(didTapCancel), for: .touchUpInside)
+
+        doneButton.setTitle("Done", for: .normal)
+        doneButton.titleLabel?.font = .preferredFont(forTextStyle: .headline)
+        doneButton.addTarget(self, action: #selector(didTapDone), for: .touchUpInside)
+
+        let buttons = UIStackView(arrangedSubviews: [cancelButton, doneButton])
+        buttons.axis = .horizontal
+        buttons.distribution = .fillEqually
+        buttons.spacing = 12
+
+        let stack = UIStackView(arrangedSubviews: [titleLabel, datePicker, buttons])
+        stack.axis = .vertical
+        stack.spacing = 12
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        view.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            datePicker.leadingAnchor.constraint(equalTo: alert.view.leadingAnchor, constant: 12),
-            datePicker.trailingAnchor.constraint(equalTo: alert.view.trailingAnchor, constant: -12),
-            datePicker.topAnchor.constraint(equalTo: alert.view.topAnchor, constant: 48),
-            datePicker.heightAnchor.constraint(equalToConstant: 216)
+            stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
+            stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
         ])
+    }
 
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Done", style: .default) { _ in
-            onPick(datePicker.date)
-        })
+    @objc private func didTapCancel() {
+        dismiss(animated: true)
+    }
 
-        if let popover = alert.popoverPresentationController {
-            popover.sourceView = self.view
-            popover.sourceRect = CGRect(
-                x: self.view.bounds.midX,
-                y: self.view.bounds.midY,
-                width: 0,
-                height: 0
-            )
-            popover.permittedArrowDirections = []
+    @objc private func didTapDone() {
+        let picked = datePicker.date
+        dismiss(animated: true) { [onPick] in
+            onPick(picked)
         }
-
-        present(alert, animated: true)
     }
 }
