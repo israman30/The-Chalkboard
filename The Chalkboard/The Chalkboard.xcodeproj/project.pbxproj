@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		017B63B6617F85B5019F3AFB /* UIKitPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 257DBE297FDA5C69A575F667 /* UIKitPreviews.swift */; };
+		A0C1D2E3F4A5B6C7D8E9F101 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C1D2E3F4A5B6C7D8E9F001 /* PersistenceController.swift */; };
+		A0C1D2E3F4A5B6C7D8E9F102 /* CDChalkboardItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C1D2E3F4A5B6C7D8E9F002 /* CDChalkboardItem.swift */; };
+		A0C1D2E3F4A5B6C7D8E9F103 /* ChalkboardItemStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C1D2E3F4A5B6C7D8E9F003 /* ChalkboardItemStore.swift */; };
+		A0C1D2E3F4A5B6C7D8E9F104 /* ChalkboardModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A0C1D2E3F4A5B6C7D8E9F004 /* ChalkboardModel.xcdatamodeld */; };
 		4D0943DD29BD7BA600C40E27 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0943DC29BD7BA600C40E27 /* MainView.swift */; };
 		4D0943E029BD7C0900C40E27 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0943DF29BD7C0900C40E27 /* Utils.swift */; };
 		4D7DD1722F9C5B9100A5F6C1 /* ChalkboardItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD1712F9C5B8000A5F6C1 /* ChalkboardItem.swift */; };
@@ -46,6 +50,10 @@
 
 /* Begin PBXFileReference section */
 		257DBE297FDA5C69A575F667 /* UIKitPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitPreviews.swift; sourceTree = "<group>"; };
+		A0C1D2E3F4A5B6C7D8E9F001 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		A0C1D2E3F4A5B6C7D8E9F002 /* CDChalkboardItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CDChalkboardItem.swift; sourceTree = "<group>"; };
+		A0C1D2E3F4A5B6C7D8E9F003 /* ChalkboardItemStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChalkboardItemStore.swift; sourceTree = "<group>"; };
+		A0C1D2E3F4A5B6C7D8E9F004 /* ChalkboardModel.xcdatamodeld */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodeld; path = ChalkboardModel.xcdatamodeld; sourceTree = "<group>"; };
 		4D0943DC29BD7BA600C40E27 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		4D0943DF29BD7C0900C40E27 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		4D7DD1712F9C5B8000A5F6C1 /* ChalkboardItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChalkboardItem.swift; sourceTree = "<group>"; };
@@ -94,6 +102,16 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A0C1D2E3F4A5B6C7D8E9F201 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				A0C1D2E3F4A5B6C7D8E9F001 /* PersistenceController.swift */,
+				A0C1D2E3F4A5B6C7D8E9F002 /* CDChalkboardItem.swift */,
+				A0C1D2E3F4A5B6C7D8E9F003 /* ChalkboardItemStore.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
 		4D0943DE29BD7BD200C40E27 /* View */ = {
 			isa = PBXGroup;
 			children = (
@@ -128,6 +146,7 @@
 			isa = PBXGroup;
 			children = (
 				4D7DD1712F9C5B8000A5F6C1 /* ChalkboardItem.swift */,
+				A0C1D2E3F4A5B6C7D8E9F004 /* ChalkboardModel.xcdatamodeld */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -165,6 +184,7 @@
 			children = (
 				4D7DD1732F9C5BC300A5F6C1 /* ViewModel */,
 				4D7DD1702F9C5B7300A5F6C1 /* Model */,
+				A0C1D2E3F4A5B6C7D8E9F201 /* Persistence */,
 				8DC5720427F3FBF500533FF7 /* SceneDelegate.swift */,
 				8DC5720227F3FBF500533FF7 /* AppDelegate.swift */,
 				4D7DD16F2F9C5B1E00A5F6C1 /* Controller */,
@@ -333,12 +353,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A0C1D2E3F4A5B6C7D8E9F104 /* ChalkboardModel.xcdatamodeld in Sources */,
 				4D0943E029BD7C0900C40E27 /* Utils.swift in Sources */,
 				4D7DD1722F9C5B9100A5F6C1 /* ChalkboardItem.swift in Sources */,
 				4D7DD1772F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift in Sources */,
 				4D7DD17B2F9C60A100A5F6C1 /* EditItemSheetViewController.swift in Sources */,
 				4D7DD17D2F9C61A100A5F6C1 /* ItemDetailSheetViewController.swift in Sources */,
 				4D7DD1792F9C5CCC00A5F6C1 /* ItemViewModel.swift in Sources */,
+				A0C1D2E3F4A5B6C7D8E9F101 /* PersistenceController.swift in Sources */,
+				A0C1D2E3F4A5B6C7D8E9F102 /* CDChalkboardItem.swift in Sources */,
+				A0C1D2E3F4A5B6C7D8E9F103 /* ChalkboardItemStore.swift in Sources */,
 				017B63B6617F85B5019F3AFB /* UIKitPreviews.swift in Sources */,
 				8DC5720727F3FBF500533FF7 /* MainController.swift in Sources */,
 				4D0943DD29BD7BA600C40E27 /* MainView.swift in Sources */,
