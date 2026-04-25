@@ -133,6 +133,14 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
             else { return }
             self.presentEditItem(at: indexPath)
         }
+        cell.onDetailTapped = { [weak self, weak tableView] cell in
+            guard
+                let self,
+                let tableView,
+                let indexPath = tableView.indexPath(for: cell)
+            else { return }
+            self.presentItemDetail(at: indexPath)
+        }
         cell.onTitleTapped = { [weak self, weak tableView] cell in
             guard
                 let self,
@@ -223,6 +231,20 @@ private extension MainController {
             }
         }
         present(editVC, animated: true)
+    }
+    
+    func presentItemDetail(at indexPath: IndexPath) {
+        let item = itemViewModel.items[indexPath.row]
+        let detailVC = ItemDetailSheetViewController(item: item)
+        
+        detailVC.modalPresentationStyle = .pageSheet
+        if #available(iOS 15.0, *) {
+            if let sheet = detailVC.sheetPresentationController {
+                sheet.detents = [.medium(), .large()]
+                sheet.prefersGrabberVisible = true
+            }
+        }
+        present(detailVC, animated: true)
     }
 }
 

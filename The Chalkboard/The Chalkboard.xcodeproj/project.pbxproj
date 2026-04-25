@@ -14,6 +14,7 @@
 		4D7DD1752F9C5BE700A5F6C1 /* MainCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD1742F9C5BE700A5F6C1 /* MainCell.swift */; };
 		4D7DD1772F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD1762F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift */; };
 		4D7DD17B2F9C60A100A5F6C1 /* EditItemSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD17A2F9C60A100A5F6C1 /* EditItemSheetViewController.swift */; };
+		4D7DD17D2F9C61A100A5F6C1 /* ItemDetailSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD17C2F9C61A100A5F6C1 /* ItemDetailSheetViewController.swift */; };
 		4D7DD1792F9C5CCC00A5F6C1 /* ItemViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD1782F9C5CCC00A5F6C1 /* ItemViewModel.swift */; };
 		8DC5720327F3FBF500533FF7 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC5720227F3FBF500533FF7 /* AppDelegate.swift */; };
 		8DC5720527F3FBF500533FF7 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC5720427F3FBF500533FF7 /* SceneDelegate.swift */; };
@@ -51,6 +52,7 @@
 		4D7DD1742F9C5BE700A5F6C1 /* MainCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainCell.swift; sourceTree = "<group>"; };
 		4D7DD1762F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerSheetViewController.swift; sourceTree = "<group>"; };
 		4D7DD17A2F9C60A100A5F6C1 /* EditItemSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditItemSheetViewController.swift; sourceTree = "<group>"; };
+		4D7DD17C2F9C61A100A5F6C1 /* ItemDetailSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailSheetViewController.swift; sourceTree = "<group>"; };
 		4D7DD1782F9C5CCC00A5F6C1 /* ItemViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemViewModel.swift; sourceTree = "<group>"; };
 		8DC571FF27F3FBF500533FF7 /* The Chalkboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Chalkboard.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DC5720227F3FBF500533FF7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -117,6 +119,7 @@
 				8DC5720627F3FBF500533FF7 /* MainController.swift */,
 				4D7DD1762F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift */,
 				4D7DD17A2F9C60A100A5F6C1 /* EditItemSheetViewController.swift */,
+				4D7DD17C2F9C61A100A5F6C1 /* ItemDetailSheetViewController.swift */,
 			);
 			path = Controller;
 			sourceTree = "<group>";
@@ -334,6 +337,7 @@
 				4D7DD1722F9C5B9100A5F6C1 /* ChalkboardItem.swift in Sources */,
 				4D7DD1772F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift in Sources */,
 				4D7DD17B2F9C60A100A5F6C1 /* EditItemSheetViewController.swift in Sources */,
+				4D7DD17D2F9C61A100A5F6C1 /* ItemDetailSheetViewController.swift in Sources */,
 				4D7DD1792F9C5CCC00A5F6C1 /* ItemViewModel.swift in Sources */,
 				017B63B6617F85B5019F3AFB /* UIKitPreviews.swift in Sources */,
 				8DC5720727F3FBF500533FF7 /* MainController.swift in Sources */,
