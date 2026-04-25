@@ -37,23 +37,18 @@ class MainController: UIViewController {
         return btn
     }()
     
-    var itemViewModel: ItemViewModel!
+    var itemViewModel = ItemViewModel()
     
     var inputHeightConstrain: NSLayoutConstraint?
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        itemViewModel = ItemViewModel()
         title = "The Chalkboard"
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(openInput))
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
         textField.addTarget(self, action: #selector(input), for: .editingChanged)
         setMainUI()
         tableView.reloadData()
-    }
-    
-    deinit {
-        itemViewModel = nil
     }
     
     @objc func input() {

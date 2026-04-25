@@ -11,7 +11,11 @@ enum Cell: String {
     case mainCell = "cell"
 }
 
-final class MainCell: UITableViewCell {
+protocol CellProtocol {
+    func bind(_ item: ChalkboardItem)
+}
+
+final class MainCell: UITableViewCell, CellProtocol {
     
     private let containerView: UIView = {
         let view = UIView()
