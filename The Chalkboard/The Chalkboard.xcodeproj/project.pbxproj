@@ -10,6 +10,10 @@
 		017B63B6617F85B5019F3AFB /* UIKitPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 257DBE297FDA5C69A575F667 /* UIKitPreviews.swift */; };
 		4D0943DD29BD7BA600C40E27 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0943DC29BD7BA600C40E27 /* MainView.swift */; };
 		4D0943E029BD7C0900C40E27 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0943DF29BD7C0900C40E27 /* Utils.swift */; };
+		4D7DD1722F9C5B9100A5F6C1 /* ChalkboardItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD1712F9C5B8000A5F6C1 /* ChalkboardItem.swift */; };
+		4D7DD1752F9C5BE700A5F6C1 /* MainCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD1742F9C5BE700A5F6C1 /* MainCell.swift */; };
+		4D7DD1772F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD1762F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift */; };
+		4D7DD1792F9C5CCC00A5F6C1 /* ItemViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD1782F9C5CCC00A5F6C1 /* ItemViewModel.swift */; };
 		8DC5720327F3FBF500533FF7 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC5720227F3FBF500533FF7 /* AppDelegate.swift */; };
 		8DC5720527F3FBF500533FF7 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC5720427F3FBF500533FF7 /* SceneDelegate.swift */; };
 		8DC5720727F3FBF500533FF7 /* MainController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DC5720627F3FBF500533FF7 /* MainController.swift */; };
@@ -42,6 +46,10 @@
 		257DBE297FDA5C69A575F667 /* UIKitPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitPreviews.swift; sourceTree = "<group>"; };
 		4D0943DC29BD7BA600C40E27 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		4D0943DF29BD7C0900C40E27 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		4D7DD1712F9C5B8000A5F6C1 /* ChalkboardItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChalkboardItem.swift; sourceTree = "<group>"; };
+		4D7DD1742F9C5BE700A5F6C1 /* MainCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainCell.swift; sourceTree = "<group>"; };
+		4D7DD1762F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerSheetViewController.swift; sourceTree = "<group>"; };
+		4D7DD1782F9C5CCC00A5F6C1 /* ItemViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemViewModel.swift; sourceTree = "<group>"; };
 		8DC571FF27F3FBF500533FF7 /* The Chalkboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "The Chalkboard.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		8DC5720227F3FBF500533FF7 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8DC5720427F3FBF500533FF7 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -88,6 +96,7 @@
 				8DC5720D27F3FBF800533FF7 /* LaunchScreen.storyboard */,
 				8DC5720827F3FBF500533FF7 /* Main.storyboard */,
 				4D0943DC29BD7BA600C40E27 /* MainView.swift */,
+				4D7DD1742F9C5BE700A5F6C1 /* MainCell.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -104,8 +113,25 @@
 			isa = PBXGroup;
 			children = (
 				8DC5720627F3FBF500533FF7 /* MainController.swift */,
+				4D7DD1762F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift */,
 			);
 			path = Controller;
+			sourceTree = "<group>";
+		};
+		4D7DD1702F9C5B7300A5F6C1 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				4D7DD1712F9C5B8000A5F6C1 /* ChalkboardItem.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		4D7DD1732F9C5BC300A5F6C1 /* ViewModel */ = {
+			isa = PBXGroup;
+			children = (
+				4D7DD1782F9C5CCC00A5F6C1 /* ItemViewModel.swift */,
+			);
+			path = ViewModel;
 			sourceTree = "<group>";
 		};
 		8DC571F627F3FBF500533FF7 = {
@@ -131,6 +157,8 @@
 		8DC5720127F3FBF500533FF7 /* The Chalkboard */ = {
 			isa = PBXGroup;
 			children = (
+				4D7DD1732F9C5BC300A5F6C1 /* ViewModel */,
+				4D7DD1702F9C5B7300A5F6C1 /* Model */,
 				8DC5720427F3FBF500533FF7 /* SceneDelegate.swift */,
 				8DC5720227F3FBF500533FF7 /* AppDelegate.swift */,
 				4D7DD16F2F9C5B1E00A5F6C1 /* Controller */,
@@ -300,10 +328,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D0943E029BD7C0900C40E27 /* Utils.swift in Sources */,
+				4D7DD1722F9C5B9100A5F6C1 /* ChalkboardItem.swift in Sources */,
+				4D7DD1772F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift in Sources */,
+				4D7DD1792F9C5CCC00A5F6C1 /* ItemViewModel.swift in Sources */,
 				017B63B6617F85B5019F3AFB /* UIKitPreviews.swift in Sources */,
 				8DC5720727F3FBF500533FF7 /* MainController.swift in Sources */,
 				4D0943DD29BD7BA600C40E27 /* MainView.swift in Sources */,
 				8DC5720327F3FBF500533FF7 /* AppDelegate.swift in Sources */,
+				4D7DD1752F9C5BE700A5F6C1 /* MainCell.swift in Sources */,
 				8DC5720527F3FBF500533FF7 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

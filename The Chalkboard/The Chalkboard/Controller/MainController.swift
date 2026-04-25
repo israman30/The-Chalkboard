@@ -7,9 +7,8 @@
 
 import UIKit
 
-struct ChalkboardItem: Equatable {
-    let text: String
-    var date: Date
+protocol PresentPickerProtocol {
+    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date) -> Void)
 }
 
 class MainController: UIViewController {
@@ -38,20 +37,23 @@ class MainController: UIViewController {
         return btn
     }()
     
-    var items = [ChalkboardItem]()
-    
-    var isOpen = false
+    var itemViewModel: ItemViewModel!
     
     var inputHeightConstrain: NSLayoutConstraint?
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        itemViewModel = ItemViewModel()
         title = "The Chalkboard"
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(openInput))
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
         textField.addTarget(self, action: #selector(input), for: .editingChanged)
         setMainUI()
         tableView.reloadData()
+    }
+    
+    deinit {
+        itemViewModel = nil
     }
     
     @objc func input() {
@@ -74,17 +76,14 @@ class MainController: UIViewController {
 
         view.endEditing(true)
 
-        presentDatePicker(
-            title: "Date added",
-            initialDate: Date()
-        ) { [weak self] selectedDate in
+        presentDatePicker(title: "Date added", initialDate: Date()) { [weak self] selectedDate in
             guard let self else { return }
 
             self.textField.text = ""
             self.input()
 
-            let newIndex = self.items.count
-            self.items.append(ChalkboardItem(text: inputText, date: selectedDate))
+            let newIndex = self.itemViewModel.items.count
+            self.itemViewModel.items.append(ChalkboardItem(text: inputText, date: selectedDate))
 
             let indexPath = IndexPath(row: newIndex, section: 0)
             DispatchQueue.main.async {
@@ -98,12 +97,12 @@ class MainController: UIViewController {
     }
     
     @objc func openInput() {
-        if !isOpen {
-            isOpen = true
+        if !itemViewModel.isOpen {
+            itemViewModel.isOpen = true
             inputHeightConstrain?.constant = 50.0
             addButton.setTitle("Add", for: .normal)
         } else {
-            isOpen = false
+            itemViewModel.isOpen = false
             inputHeightConstrain?.constant = 0.0
             addButton.setTitle("", for: .normal)
         }
@@ -114,19 +113,15 @@ class MainController: UIViewController {
 
 }
 
-enum Cell: String {
-    case mainCell = "cell"
-}
-
 extension MainController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return items.count
+        return itemViewModel.items.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: Cell.mainCell.rawValue, for: indexPath) as! MainCell
-        cell.bind(items[indexPath.row])
+        cell.bind(itemViewModel.items[indexPath.row])
         return cell
     }
     
@@ -137,13 +132,10 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        let item = items[indexPath.row]
-        presentDatePicker(
-            title: "Update date added",
-            initialDate: item.date
-        ) { [weak self] selectedDate in
+        let item = itemViewModel.items[indexPath.row]
+        presentDatePicker(title: "Update date added", initialDate: item.date) { [weak self] selectedDate in
             guard let self else { return }
-            self.items[indexPath.row].date = selectedDate
+            self.itemViewModel.items[indexPath.row].date = selectedDate
             self.tableView.reloadRows(at: [indexPath], with: .automatic)
         }
     }
@@ -159,7 +151,7 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
                 return
             }
             
-            self.items.remove(at: indexPath.row)
+            self.itemViewModel.items.remove(at: indexPath.row)
             
             tableView.performBatchUpdates {
                 tableView.deleteRows(at: [indexPath], with: .automatic)
@@ -179,119 +171,7 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
     
 }
 
-final class MainCell: UITableViewCell {
-    
-    private let containerView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
-        view.layer.cornerRadius = 14
-        if #available(iOS 13.0, *) {
-            view.layer.cornerCurve = .continuous
-        }
-        view.layer.borderWidth = 1 / UIScreen.main.scale
-        view.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
-        return view
-    }()
-    
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        let baseFont = UIFont(name: "GillSans-Italic", size: 22) ?? UIFont.preferredFont(forTextStyle: .headline)
-        label.font = UIFontMetrics(forTextStyle: .headline).scaledFont(for: baseFont)
-        label.adjustsFontForContentSizeCategory = true
-        label.textColor = .label
-        return label
-    }()
-    
-    private let dateLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = .secondaryLabel
-        label.font = .preferredFont(forTextStyle: .subheadline)
-        label.adjustsFontForContentSizeCategory = true
-        label.numberOfLines = 1
-        return label
-    }()
-    
-    private let stackView: UIStackView = {
-        let sv = UIStackView()
-        sv.axis = .vertical
-        sv.spacing = 6
-        sv.alignment = .fill
-        return sv
-    }()
-    
-    private static let dateFormatter: DateFormatter = {
-        let df = DateFormatter()
-        df.dateStyle = .medium
-        df.timeStyle = .none
-        return df
-    }()
-    
-    func bind(_ item: ChalkboardItem) {
-        titleLabel.text = item.text
-        dateLabel.text = "Added \(Self.dateFormatter.string(from: item.date))"
-        accessibilityLabel = "\(item.text). Added \(Self.dateFormatter.string(from: item.date))"
-    }
-    
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        selectionStyle = .none
-        backgroundColor = .clear
-        contentView.backgroundColor = .clear
-        
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        dateLabel.translatesAutoresizingMaskIntoConstraints = false
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-
-        contentView.addSubview(containerView)
-        
-        stackView.addArrangedSubview(titleLabel)
-        stackView.addArrangedSubview(dateLabel)
-        containerView.addSubview(stackView)
-        
-        NSLayoutConstraint.activate([
-            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
-            
-            stackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 14),
-            stackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -14),
-            stackView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 12),
-            stackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12)
-        ])
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func setHighlighted(_ highlighted: Bool, animated: Bool) {
-        super.setHighlighted(highlighted, animated: animated)
-        updateHighlight(highlighted: highlighted, animated: animated)
-    }
-    
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-        updateHighlight(highlighted: selected, animated: animated)
-    }
-    
-    private func updateHighlight(highlighted: Bool, animated: Bool) {
-        let updates = {
-            self.containerView.backgroundColor = highlighted ? .tertiarySystemBackground : .secondarySystemBackground
-            self.containerView.layer.borderColor = UIColor.separator.withAlphaComponent(highlighted ? 0.45 : 0.25).cgColor
-        }
-        
-        if animated {
-            UIView.animate(withDuration: 0.15, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: updates)
-        } else {
-            updates()
-        }
-    }
-}
-
-private extension MainController {
+extension MainController: PresentPickerProtocol {
     func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date) -> Void) {
         let pickerVC = DatePickerSheetViewController(
             titleText: title,
@@ -309,82 +189,6 @@ private extension MainController {
     }
 }
 
-private final class DatePickerSheetViewController: UIViewController {
-    private let titleText: String
-    private let initialDate: Date
-    private let onPick: (Date) -> Void
-
-    private let titleLabel = UILabel()
-    private let datePicker = UIDatePicker()
-    private let cancelButton = UIButton(type: .system)
-    private let doneButton = UIButton(type: .system)
-
-    init(titleText: String, initialDate: Date, onPick: @escaping (Date) -> Void) {
-        self.titleText = titleText
-        self.initialDate = initialDate
-        self.onPick = onPick
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        view.backgroundColor = .systemBackground
-
-        titleLabel.text = titleText
-        titleLabel.font = .preferredFont(forTextStyle: .headline)
-        titleLabel.textAlignment = .center
-        titleLabel.numberOfLines = 2
-
-        datePicker.datePickerMode = .date
-        if #available(iOS 14.0, *) {
-            datePicker.preferredDatePickerStyle = .inline
-        }
-        datePicker.date = initialDate
-
-        cancelButton.setTitle("Cancel", for: .normal)
-        cancelButton.addTarget(self, action: #selector(didTapCancel), for: .touchUpInside)
-
-        doneButton.setTitle("Done", for: .normal)
-        doneButton.titleLabel?.font = .preferredFont(forTextStyle: .headline)
-        doneButton.addTarget(self, action: #selector(didTapDone), for: .touchUpInside)
-
-        let buttons = UIStackView(arrangedSubviews: [cancelButton, doneButton])
-        buttons.axis = .horizontal
-        buttons.distribution = .fillEqually
-        buttons.spacing = 12
-
-        let stack = UIStackView(arrangedSubviews: [titleLabel, datePicker, buttons])
-        stack.axis = .vertical
-        stack.spacing = 12
-        stack.translatesAutoresizingMaskIntoConstraints = false
-
-        view.addSubview(stack)
-
-        NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16),
-            stack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
-            stack.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
-        ])
-    }
-
-    @objc private func didTapCancel() {
-        dismiss(animated: true)
-    }
-
-    @objc private func didTapDone() {
-        let picked = datePicker.date
-        dismiss(animated: true) { [onPick] in
-            onPick(picked)
-        }
-    }
-}
-
 #if DEBUG
 import SwiftUI
 
@@ -392,7 +196,7 @@ import SwiftUI
 private struct MainControllerPreview: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UINavigationController {
         let vc = MainController()
-        vc.items = [
+        vc.itemViewModel.items = [
             ChalkboardItem(text: "Finish the UI polish for the chalkboard cells.", date: Date()),
             ChalkboardItem(text: "Swipe left on a cell to delete it.", date: Calendar.current.date(byAdding: .day, value: -2, to: Date()) ?? Date()),
             ChalkboardItem(text: "Tap a cell to update its date.", date: Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date())
