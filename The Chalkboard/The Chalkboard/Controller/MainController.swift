@@ -38,6 +38,8 @@ class MainController: UIViewController {
     }()
     
     var itemViewModel = ItemViewModel()
+
+    private let itemStore: ChalkboardItemStoring = ChalkboardItemStore.shared
     
     var inputHeightConstrain: NSLayoutConstraint?
 
@@ -48,8 +50,22 @@ class MainController: UIViewController {
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
         textField.addTarget(self, action: #selector(input), for: .editingChanged)
         setMainUI()
-        tableView.reloadData()
+        loadItems()
         applyViewState()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        loadItems()
+    }
+
+    private func loadItems() {
+        do {
+            itemViewModel.items = try itemStore.fetchAll()
+            tableView.reloadData()
+        } catch {
+            assertionFailure("Failed to fetch items: \(error)")
+        }
     }
 
     private func updateInputToggleButton() {
@@ -82,17 +98,22 @@ class MainController: UIViewController {
             self.textField.text = ""
             self.input()
 
-            let newIndex = self.itemViewModel.items.count
-            self.itemViewModel.items.append(ChalkboardItem(text: inputText, date: selectedDate))
-            self.applyViewState()
+            do {
+                let newItem = try self.itemStore.create(text: inputText, date: selectedDate, isCompleted: false)
+                let newIndex = self.itemViewModel.items.count
+                self.itemViewModel.items.append(newItem)
+                self.applyViewState()
 
-            let indexPath = IndexPath(row: newIndex, section: 0)
-            DispatchQueue.main.async {
-                self.tableView.performBatchUpdates {
-                    self.tableView.insertRows(at: [indexPath], with: .automatic)
-                } completion: { _ in
-                    self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+                let indexPath = IndexPath(row: newIndex, section: 0)
+                DispatchQueue.main.async {
+                    self.tableView.performBatchUpdates {
+                        self.tableView.insertRows(at: [indexPath], with: .automatic)
+                    } completion: { _ in
+                        self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+                    }
                 }
+            } catch {
+                assertionFailure("Failed to create item: \(error)")
             }
         }
     }
@@ -151,6 +172,12 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
             else { return }
             
             self.itemViewModel.items[indexPath.row].isCompleted.toggle()
+            let updated = self.itemViewModel.items[indexPath.row]
+            do {
+                _ = try self.itemStore.setCompleted(id: updated.id, isCompleted: updated.isCompleted)
+            } catch {
+                assertionFailure("Failed to update completion: \(error)")
+            }
             tableView.reloadRows(at: [indexPath], with: .automatic)
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
         }
@@ -171,17 +198,24 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
                 completion(false)
                 return
             }
-            
-            self.itemViewModel.items.remove(at: indexPath.row)
-            applyViewState()
-            
-            tableView.performBatchUpdates {
-                tableView.deleteRows(at: [indexPath], with: .automatic)
-            } completion: { _ in
-                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+
+            let item = self.itemViewModel.items[indexPath.row]
+            do {
+                try self.itemStore.delete(id: item.id)
+                self.itemViewModel.items.remove(at: indexPath.row)
+                applyViewState()
+
+                tableView.performBatchUpdates {
+                    tableView.deleteRows(at: [indexPath], with: .automatic)
+                } completion: { _ in
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                }
+
+                completion(true)
+            } catch {
+                assertionFailure("Failed to delete item: \(error)")
+                completion(false)
             }
-            
-            completion(true)
         }
         
         deleteAction.image = UIImage(systemName: "trash")
@@ -270,9 +304,19 @@ private extension MainController {
             initialDate: item.date
         ) { [weak self] updatedText, updatedDate in
             guard let self else { return }
-            self.itemViewModel.items[indexPath.row].text = updatedText
-            self.itemViewModel.items[indexPath.row].date = updatedDate
-            self.tableView.reloadRows(at: [indexPath], with: .automatic)
+            let existing = self.itemViewModel.items[indexPath.row]
+            do {
+                let updated = try self.itemStore.update(
+                    id: existing.id,
+                    text: updatedText,
+                    date: updatedDate,
+                    isCompleted: existing.isCompleted
+                )
+                self.itemViewModel.items[indexPath.row] = updated
+                self.tableView.reloadRows(at: [indexPath], with: .automatic)
+            } catch {
+                assertionFailure("Failed to update item: \(error)")
+            }
         }
         
         editVC.modalPresentationStyle = .pageSheet
@@ -292,6 +336,12 @@ private extension MainController {
             onToggleCompleted: { [weak self, weak tableView] isCompleted in
                 guard let self, let tableView else { return }
                 self.itemViewModel.items[indexPath.row].isCompleted = isCompleted
+                let updated = self.itemViewModel.items[indexPath.row]
+                do {
+                    _ = try self.itemStore.setCompleted(id: updated.id, isCompleted: updated.isCompleted)
+                } catch {
+                    assertionFailure("Failed to update completion: \(error)")
+                }
                 tableView.reloadRows(at: [indexPath], with: .automatic)
             },
             onEdit: { [weak self] in

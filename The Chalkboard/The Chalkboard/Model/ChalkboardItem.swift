@@ -7,6 +7,7 @@
 import UIKit
 
 struct ChalkboardItem: Equatable {
+    var id: UUID = UUID()
     var text: String
     var date: Date
     var isCompleted: Bool = false
