@@ -19,12 +19,40 @@ class MainController: UIViewController {
         return tv
     }()
     
-    let textField: UITextField = {
-        let tf = UITextField()
-        tf.placeholder = "Enter something.."
-        tf.textColor = .label
-        tf.makeFontDynamic()
-        return tf
+    let inputContainerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .secondarySystemBackground
+        view.layer.cornerRadius = 12
+        view.layer.cornerCurve = .continuous
+        view.layer.borderWidth = 1 / UIScreen.main.scale
+        view.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        return view
+    }()
+
+    let inputTextView: UITextView = {
+        let tv = AutoGrowingTextView()
+        tv.backgroundColor = .clear
+        tv.textColor = .label
+        tv.font = UIFont(name: "GillSans-Italic", size: UIFont.preferredFont(forTextStyle: .title3).pointSize)
+        tv.adjustsFontForContentSizeCategory = true
+        tv.textContainerInset = .zero
+        tv.textContainer.lineFragmentPadding = 0
+        tv.isScrollEnabled = false
+        tv.keyboardType = .default
+        tv.autocapitalizationType = .sentences
+        tv.accessibilityLabel = "New item"
+        return tv
+    }()
+
+    let inputPlaceholderLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Enter something.."
+        label.textColor = .secondaryLabel
+        label.font = UIFont(name: "GillSans-Italic", size: UIFont.preferredFont(forTextStyle: .title3).pointSize)
+        label.adjustsFontForContentSizeCategory = true
+        label.numberOfLines = 1
+        label.isUserInteractionEnabled = false
+        return label
     }()
     
     let addButton: UIButton = {
@@ -36,6 +64,8 @@ class MainController: UIViewController {
         btn.layer.cornerRadius = 2
         return btn
     }()
+
+    let inputBarStackView = UIStackView()
     
     var itemViewModel = ItemViewModel()
 
@@ -44,13 +74,15 @@ class MainController: UIViewController {
     private let itemStore: ChalkboardItemStoring = ChalkboardItemStore.shared
     
     var inputHeightConstrain: NSLayoutConstraint?
+    private let inputMinHeight: CGFloat = 50
+    private let inputMaxHeight: CGFloat = 150
 
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "The Chalkboard"
         updateInputToggleButton()
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
-        textField.addTarget(self, action: #selector(input), for: .editingChanged)
+        inputTextView.delegate = self
         setMainUI()
         // READ: Load persisted items from Core Data.
         loadItems()
@@ -83,14 +115,19 @@ class MainController: UIViewController {
     }
     
     @objc func input() {
-        let hasInput = textField.text?.isEmpty == false
+        let trimmed = (inputTextView.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasInput = !trimmed.isEmpty
+
+        inputPlaceholderLabel.isHidden = !trimmed.isEmpty
         addButton.isEnabled = hasInput
         addButton.setTitleColor(hasInput ? .white : .systemGray, for: .normal)
         addButton.backgroundColor = hasInput ? .greenColor : .systemGray4
+
+        updateInputHeight(animated: true)
     }
     
     @objc func add() {
-        let rawText = textField.text ?? ""
+        let rawText = inputTextView.text ?? ""
         let inputText = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !inputText.isEmpty else { return }
 
@@ -99,7 +136,7 @@ class MainController: UIViewController {
         presentDatePicker(title: "Date added", initialDate: Date()) { [weak self] selectedDate in
             guard let self else { return }
 
-            self.textField.text = ""
+            self.inputTextView.text = ""
             self.input()
 
             do {
@@ -126,14 +163,22 @@ class MainController: UIViewController {
     @objc func openInput() {
         itemViewModel.isOpen.toggle()
         
-        inputHeightConstrain?.constant = itemViewModel.isOpen ? 50 : 0
+        inputHeightConstrain?.constant = itemViewModel.isOpen ? preferredOpenInputHeight() : 0
         addButton.setTitle(itemViewModel.isOpen ? "Add" : "", for: .normal)
         
         if !itemViewModel.isOpen {
             view.endEditing(true)
+            // Prevent placeholder from flashing when the bar is collapsed to 0.
+            inputPlaceholderLabel.isHidden = true
         }
         updateInputToggleButton()
         animateLayout()
+
+        if itemViewModel.isOpen {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) { [weak self] in
+                self?.inputTextView.becomeFirstResponder()
+            }
+        }
     }
     
     private func animateLayout() {
@@ -142,6 +187,44 @@ class MainController: UIViewController {
         }
     }
 
+}
+
+private extension MainController {
+    func preferredOpenInputHeight() -> CGFloat {
+        // When opening, start at least at the minimum height and grow if there's existing text.
+        updateInputHeight(animated: false)
+        return inputHeightConstrain?.constant ?? inputMinHeight
+    }
+
+    func updateInputHeight(animated: Bool) {
+        guard itemViewModel.isOpen else { return }
+
+        view.layoutIfNeeded()
+
+        let availableWidth = max(1, inputContainerView.bounds.width)
+        let padding: CGFloat = 20 // left + right inside the input container
+        let textWidth = max(1, availableWidth - padding)
+
+        let fitting = inputTextView.sizeThatFits(CGSize(width: textWidth, height: .greatestFiniteMagnitude))
+        let target = min(max(fitting.height + 20, inputMinHeight), inputMaxHeight) // + top/bottom padding
+
+        inputTextView.isScrollEnabled = target >= inputMaxHeight
+
+        guard inputHeightConstrain?.constant != target else { return }
+        inputHeightConstrain?.constant = target
+
+        if animated {
+            UIView.animate(withDuration: 0.15, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut]) {
+                self.view.layoutIfNeeded()
+            }
+        }
+    }
+}
+
+extension MainController: UITextViewDelegate {
+    func textViewDidChange(_ textView: UITextView) {
+        input()
+    }
 }
 
 extension MainController: UITableViewDataSource, UITableViewDelegate {

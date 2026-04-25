@@ -25,8 +25,9 @@ final class ItemDetailSheetViewController: UIViewController {
     private let closeButton = UIButton(type: .system)
 
     private let itemCardView = UIView()
-    private let itemTextView = GrowingTextView()
-    private let itemPlaceholderLabel = UILabel()
+    private let itemTitleLabel = UILabel()
+    private let itemTitleEditor = AutoGrowingTextView()
+    private var itemTitleMinHeightConstraint: NSLayoutConstraint?
 
     private let chipsRow = UIStackView()
     private let statusChip = ChipView()
@@ -42,6 +43,8 @@ final class ItemDetailSheetViewController: UIViewController {
     private var isShowingDatePicker = false
     private var backgroundTapGesture: UITapGestureRecognizer?
     private var itemCardTapGesture: UITapGestureRecognizer?
+
+    private let itemTextMinHeight: CGFloat = 44
 
     private static let dateFormatter: DateFormatter = {
         let df = DateFormatter()
@@ -77,6 +80,12 @@ final class ItemDetailSheetViewController: UIViewController {
         applyItemToUI(animated: false)
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // Ensure layout updates keep the editor's intrinsic height accurate.
+        itemTitleEditor.invalidateIntrinsicContentSize()
+    }
+
     @objc private func didTapClose() {
         dismiss(animated: true)
     }
@@ -95,8 +104,7 @@ final class ItemDetailSheetViewController: UIViewController {
         item.text = trimmed
         item.date = draftDate
         draftText = trimmed
-        itemTextView.text = trimmed
-        itemPlaceholderLabel.isHidden = !trimmed.isEmpty
+        applyDraftTitleToLabel()
 
         view.endEditing(true)
         onUpdate?(trimmed, draftDate)
@@ -133,7 +141,7 @@ final class ItemDetailSheetViewController: UIViewController {
     }
 
     @objc private func didTapItemCard() {
-        itemTextView.becomeFirstResponder()
+        beginEditingTitle()
     }
 
     @objc private func didTapCopy() {
@@ -163,6 +171,7 @@ private extension ItemDetailSheetViewController {
         scrollView.alwaysBounceVertical = true
         scrollView.showsVerticalScrollIndicator = true
         scrollView.keyboardDismissMode = .interactive
+        scrollView.delaysContentTouches = false
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(didTapBackground))
         tap.cancelsTouchesInView = false
@@ -234,43 +243,54 @@ private extension ItemDetailSheetViewController {
         itemCardView.addGestureRecognizer(cardTap)
         itemCardTapGesture = cardTap
 
-        itemPlaceholderLabel.translatesAutoresizingMaskIntoConstraints = false
-        itemPlaceholderLabel.isUserInteractionEnabled = false
-        itemPlaceholderLabel.text = "Title"
-        itemPlaceholderLabel.font = .preferredFont(forTextStyle: .title2)
-        itemPlaceholderLabel.adjustsFontForContentSizeCategory = true
-        itemPlaceholderLabel.textColor = .secondaryLabel
-        itemPlaceholderLabel.numberOfLines = 0
+        itemTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        itemTitleLabel.font = .preferredFont(forTextStyle: .title2)
+        itemTitleLabel.adjustsFontForContentSizeCategory = true
+        itemTitleLabel.textColor = .label
+        itemTitleLabel.numberOfLines = 0
+        itemTitleLabel.isUserInteractionEnabled = true
+        itemTitleLabel.accessibilityTraits.insert(.button)
+        itemTitleLabel.accessibilityLabel = "Item title"
+        itemTitleLabel.accessibilityHint = "Double tap to edit the title"
+        itemTitleLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapItemCard)))
 
-        itemTextView.translatesAutoresizingMaskIntoConstraints = false
-        itemTextView.delegate = self
-        itemTextView.isEditable = true
-        itemTextView.isSelectable = true
-        itemTextView.isUserInteractionEnabled = true
-        itemTextView.font = .preferredFont(forTextStyle: .title2)
-        itemTextView.adjustsFontForContentSizeCategory = true
-        itemTextView.textColor = .label
-        itemTextView.backgroundColor = .clear
-        itemTextView.isScrollEnabled = false
-        itemTextView.textContainerInset = .zero
-        itemTextView.textContainer.lineFragmentPadding = 0
-        itemTextView.keyboardType = .default
-        itemTextView.autocapitalizationType = .sentences
-        itemTextView.accessibilityLabel = "Item title"
-        itemTextView.accessibilityHint = "Edit the item title"
+        itemTitleEditor.translatesAutoresizingMaskIntoConstraints = false
+        itemTitleEditor.delegate = self
+        itemTitleEditor.isEditable = true
+        itemTitleEditor.isSelectable = true
+        itemTitleEditor.isUserInteractionEnabled = true
+        itemTitleEditor.setContentHuggingPriority(.required, for: .vertical)
+        itemTitleEditor.setContentCompressionResistancePriority(.required, for: .vertical)
+        itemTitleEditor.font = .preferredFont(forTextStyle: .title2)
+        itemTitleEditor.adjustsFontForContentSizeCategory = true
+        itemTitleEditor.textColor = .label
+        itemTitleEditor.backgroundColor = .clear
+        itemTitleEditor.isScrollEnabled = false
+        itemTitleEditor.textContainerInset = .zero
+        itemTitleEditor.textContainer.lineFragmentPadding = 0
+        itemTitleEditor.keyboardType = .default
+        itemTitleEditor.autocapitalizationType = .sentences
+        itemTitleEditor.accessibilityLabel = "Edit item title"
+        itemTitleEditor.accessibilityHint = "Edit the item title"
+        itemTitleEditor.isHidden = true
 
-        itemCardView.addSubview(itemPlaceholderLabel)
-        itemCardView.addSubview(itemTextView)
+        itemCardView.addSubview(itemTitleLabel)
+        itemCardView.addSubview(itemTitleEditor)
+        let minHeight = itemTitleEditor.heightAnchor.constraint(greaterThanOrEqualToConstant: itemTextMinHeight)
+        minHeight.priority = .required
+        itemTitleMinHeightConstraint = minHeight
+
         NSLayoutConstraint.activate([
-            itemPlaceholderLabel.leadingAnchor.constraint(equalTo: itemCardView.leadingAnchor, constant: 14),
-            itemPlaceholderLabel.trailingAnchor.constraint(equalTo: itemCardView.trailingAnchor, constant: -14),
-            itemPlaceholderLabel.topAnchor.constraint(equalTo: itemCardView.topAnchor, constant: 14),
-            itemPlaceholderLabel.bottomAnchor.constraint(equalTo: itemCardView.bottomAnchor, constant: -14),
+            itemTitleLabel.leadingAnchor.constraint(equalTo: itemCardView.leadingAnchor, constant: 14),
+            itemTitleLabel.trailingAnchor.constraint(equalTo: itemCardView.trailingAnchor, constant: -14),
+            itemTitleLabel.topAnchor.constraint(equalTo: itemCardView.topAnchor, constant: 14),
+            itemTitleLabel.bottomAnchor.constraint(equalTo: itemCardView.bottomAnchor, constant: -14),
 
-            itemTextView.leadingAnchor.constraint(equalTo: itemCardView.leadingAnchor, constant: 14),
-            itemTextView.trailingAnchor.constraint(equalTo: itemCardView.trailingAnchor, constant: -14),
-            itemTextView.topAnchor.constraint(equalTo: itemCardView.topAnchor, constant: 14),
-            itemTextView.bottomAnchor.constraint(equalTo: itemCardView.bottomAnchor, constant: -14)
+            itemTitleEditor.leadingAnchor.constraint(equalTo: itemCardView.leadingAnchor, constant: 14),
+            itemTitleEditor.trailingAnchor.constraint(equalTo: itemCardView.trailingAnchor, constant: -14),
+            itemTitleEditor.topAnchor.constraint(equalTo: itemCardView.topAnchor, constant: 14),
+            itemTitleEditor.bottomAnchor.constraint(equalTo: itemCardView.bottomAnchor, constant: -14),
+            minHeight
         ])
 
         chipsRow.axis = .horizontal
@@ -425,9 +445,13 @@ private extension ItemDetailSheetViewController {
 
         headerIconView.image = UIImage(systemName: "doc.text")
 
-        itemTextView.text = draftText
-        itemPlaceholderLabel.isHidden = !draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         updateSaveState()
+
+        // Always show the entire title by expanding with its content.
+        // The outer scroll view will handle scrolling when the overall card content is tall.
+        itemTitleEditor.isScrollEnabled = false
+        itemTitleEditor.text = draftText
+        applyDraftTitleToLabel()
     }
 
     func applyItemToUI(animated: Bool) {
@@ -504,6 +528,37 @@ private extension ItemDetailSheetViewController {
         saveButton.isEnabled = canSave
         saveButton.alpha = canSave ? 1.0 : 0.5
     }
+
+    func updateTitleEditorScrolling() {
+        // Intentionally no-op: the title editor expands to fit all lines.
+        itemTitleEditor.isScrollEnabled = false
+    }
+
+    func beginEditingTitle() {
+        itemTitleEditor.text = draftText
+        itemTitleLabel.isHidden = true
+        itemTitleEditor.isHidden = false
+        itemTitleEditor.becomeFirstResponder()
+    }
+
+    func endEditingTitle() {
+        itemTitleEditor.resignFirstResponder()
+        itemTitleEditor.isHidden = true
+        itemTitleLabel.isHidden = false
+        applyDraftTitleToLabel()
+    }
+
+    func applyDraftTitleToLabel() {
+        let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            itemTitleLabel.text = "Title"
+            itemTitleLabel.textColor = .secondaryLabel
+        } else {
+            itemTitleLabel.text = trimmed
+            itemTitleLabel.textColor = .label
+        }
+        itemTitleLabel.accessibilityValue = trimmed
+    }
 }
 
 private final class ChipView: UIView {
@@ -567,8 +622,12 @@ private final class ChipView: UIView {
 extension ItemDetailSheetViewController: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         draftText = textView.text ?? ""
-        itemPlaceholderLabel.isHidden = !draftText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        itemTitleEditor.invalidateIntrinsicContentSize()
         updateSaveState()
+    }
+
+    func textViewDidEndEditing(_ textView: UITextView) {
+        endEditingTitle()
     }
 }
 
@@ -577,26 +636,11 @@ extension ItemDetailSheetViewController: UIGestureRecognizerDelegate {
         guard let touchedView = touch.view else { return true }
 
         // Don't dismiss the keyboard / steal touches while the user interacts with the editor or date picker.
-        if touchedView.isDescendant(of: itemTextView) { return false }
+        if touchedView.isDescendant(of: itemTitleEditor) { return false }
         if touchedView.isDescendant(of: itemCardView) { return false }
         if touchedView.isDescendant(of: datePicker) { return false }
 
         return true
-    }
-}
-
-private final class GrowingTextView: UITextView {
-    private var lastWidth: CGFloat = 0
-
-    override var intrinsicContentSize: CGSize {
-        CGSize(width: UIView.noIntrinsicMetric, height: contentSize.height)
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        guard bounds.width != lastWidth else { return }
-        lastWidth = bounds.width
-        invalidateIntrinsicContentSize()
     }
 }
 

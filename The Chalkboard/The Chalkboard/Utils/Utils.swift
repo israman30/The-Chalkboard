@@ -49,3 +49,27 @@ extension UILabel {
         adjustsFontSizeToFitWidth = true
     }
 }
+
+/// Shared auto-growing text view used across the app (main input + card detail editor).
+final class AutoGrowingTextView: UITextView {
+    private var lastWidth: CGFloat = 0
+
+    override var intrinsicContentSize: CGSize {
+        CGSize(width: UIView.noIntrinsicMetric, height: contentSize.height)
+    }
+
+    override var contentSize: CGSize {
+        didSet {
+            if oldValue != contentSize {
+                invalidateIntrinsicContentSize()
+            }
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard bounds.width != lastWidth else { return }
+        lastWidth = bounds.width
+        invalidateIntrinsicContentSize()
+    }
+}
