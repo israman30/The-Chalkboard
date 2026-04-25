@@ -364,14 +364,6 @@ private extension MainController {
                 }
             }
         )
-        
-        detailVC.modalPresentationStyle = .pageSheet
-        if #available(iOS 15.0, *) {
-            if let sheet = detailVC.sheetPresentationController {
-                sheet.detents = [.medium(), .large()]
-                sheet.prefersGrabberVisible = true
-            }
-        }
         present(detailVC, animated: true)
     }
 }

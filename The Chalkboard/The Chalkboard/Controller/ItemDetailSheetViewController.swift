@@ -11,6 +11,7 @@ final class ItemDetailSheetViewController: UIViewController {
     private var item: ChalkboardItem
     private let onToggleCompleted: ((Bool) -> Void)?
     private let onUpdate: ((String, Date) -> Void)?
+    private let centeredCardTransition = CenteredCardTransitioningDelegate()
 
     private var draftText: String
     private var draftDate: Date
@@ -60,6 +61,9 @@ final class ItemDetailSheetViewController: UIViewController {
         self.draftText = item.text
         self.draftDate = item.date
         super.init(nibName: nil, bundle: nil)
+        modalPresentationStyle = .custom
+        transitioningDelegate = centeredCardTransition
+        preferredContentSize = CGSize(width: 460, height: 560)
     }
 
     required init?(coder: NSCoder) {
