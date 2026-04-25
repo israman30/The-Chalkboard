@@ -44,11 +44,21 @@ class MainController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "The Chalkboard"
-        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(openInput))
+        updateInputToggleButton()
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
         textField.addTarget(self, action: #selector(input), for: .editingChanged)
         setMainUI()
         tableView.reloadData()
+    }
+
+    private func updateInputToggleButton() {
+        let symbolName = itemViewModel.isOpen ? "xmark.circle" : "plus.circle"
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+        let image = UIImage(systemName: symbolName, withConfiguration: config)
+
+        let button = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(openInput))
+        button.accessibilityLabel = itemViewModel.isOpen ? "Close input" : "Add item"
+        navigationItem.rightBarButtonItem = button
     }
     
     @objc func input() {
@@ -100,7 +110,10 @@ class MainController: UIViewController {
             itemViewModel.isOpen = false
             inputHeightConstrain?.constant = 0.0
             addButton.setTitle("", for: .normal)
+            view.endEditing(true)
         }
+
+        updateInputToggleButton()
         UIView.animate(withDuration: 0.2, delay: 0.0) {
             self.view.layoutIfNeeded()
         }
