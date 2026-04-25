@@ -21,6 +21,10 @@ extension MainController {
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 70
         tableView.keyboardDismissMode = .onDrag
+        tableView.backgroundColor = .systemBackground
+        tableView.separatorStyle = .none
+        tableView.alwaysBounceVertical = true
+        tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 16, right: 0)
         
         let stackView = UIStackView(arrangedSubviews: [textField, addButton])
         stackView.distribution = .fillProportionally

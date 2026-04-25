@@ -148,23 +148,76 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
         }
     }
     
+    func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+        true
+    }
+    
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, completion in
+            guard let self else {
+                completion(false)
+                return
+            }
+            
+            self.items.remove(at: indexPath.row)
+            
+            tableView.performBatchUpdates {
+                tableView.deleteRows(at: [indexPath], with: .automatic)
+            } completion: { _ in
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+            }
+            
+            completion(true)
+        }
+        
+        deleteAction.image = UIImage(systemName: "trash")
+        
+        let config = UISwipeActionsConfiguration(actions: [deleteAction])
+        config.performsFirstActionWithFullSwipe = true
+        return config
+    }
+    
 }
 
-class MainCell: UITableViewCell {
+final class MainCell: UITableViewCell {
     
-    let titleLabel: UILabel = {
+    private let containerView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .secondarySystemBackground
+        view.layer.cornerRadius = 14
+        if #available(iOS 13.0, *) {
+            view.layer.cornerCurve = .continuous
+        }
+        view.layer.borderWidth = 1 / UIScreen.main.scale
+        view.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        return view
+    }()
+    
+    private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Test"
         label.numberOfLines = 0
-        label.makeFontDynamic()
+        let baseFont = UIFont(name: "GillSans-Italic", size: 22) ?? UIFont.preferredFont(forTextStyle: .headline)
+        label.font = UIFontMetrics(forTextStyle: .headline).scaledFont(for: baseFont)
+        label.adjustsFontForContentSizeCategory = true
+        label.textColor = .label
         return label
     }()
     
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.text = ""
         label.textColor = .secondaryLabel
+        label.font = .preferredFont(forTextStyle: .subheadline)
+        label.adjustsFontForContentSizeCategory = true
+        label.numberOfLines = 1
         return label
+    }()
+    
+    private let stackView: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .vertical
+        sv.spacing = 6
+        sv.alignment = .fill
+        return sv
     }()
     
     private static let dateFormatter: DateFormatter = {
@@ -176,33 +229,65 @@ class MainCell: UITableViewCell {
     
     func bind(_ item: ChalkboardItem) {
         titleLabel.text = item.text
-        dateLabel.text = "Date added: \(Self.dateFormatter.string(from: item.date))"
+        dateLabel.text = "Added \(Self.dateFormatter.string(from: item.date))"
+        accessibilityLabel = "\(item.text). Added \(Self.dateFormatter.string(from: item.date))"
     }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        selectionStyle = .default
+        selectionStyle = .none
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
         
+        containerView.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
+        stackView.translatesAutoresizingMaskIntoConstraints = false
 
-        contentView.addSubview(titleLabel)
-        contentView.addSubview(dateLabel)
+        contentView.addSubview(containerView)
+        
+        stackView.addArrangedSubview(titleLabel)
+        stackView.addArrangedSubview(dateLabel)
+        containerView.addSubview(stackView)
         
         NSLayoutConstraint.activate([
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
             
-            dateLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            dateLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
-            dateLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
-            dateLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12)
+            stackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 14),
+            stackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -14),
+            stackView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 12),
+            stackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12)
         ])
     }
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func setHighlighted(_ highlighted: Bool, animated: Bool) {
+        super.setHighlighted(highlighted, animated: animated)
+        updateHighlight(highlighted: highlighted, animated: animated)
+    }
+    
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        updateHighlight(highlighted: selected, animated: animated)
+    }
+    
+    private func updateHighlight(highlighted: Bool, animated: Bool) {
+        let updates = {
+            self.containerView.backgroundColor = highlighted ? .tertiarySystemBackground : .secondarySystemBackground
+            self.containerView.layer.borderColor = UIColor.separator.withAlphaComponent(highlighted ? 0.45 : 0.25).cgColor
+        }
+        
+        if animated {
+            UIView.animate(withDuration: 0.15, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: updates)
+        } else {
+            updates()
+        }
     }
 }
 
