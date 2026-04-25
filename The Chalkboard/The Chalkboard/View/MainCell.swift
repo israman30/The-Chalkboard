@@ -26,6 +26,13 @@ final class MainCell: UITableViewCell, CellProtocol {
         }
         view.layer.borderWidth = 1 / UIScreen.main.scale
         view.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        view.layer.masksToBounds = false
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOpacity = 0.08
+        view.layer.shadowRadius = 10
+        view.layer.shadowOffset = CGSize(width: 0, height: 6)
+        view.layer.shouldRasterize = true
+        view.layer.rasterizationScale = UIScreen.main.scale
         return view
     }()
     
@@ -101,6 +108,14 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        containerView.layer.shadowPath = UIBezierPath(
+            roundedRect: containerView.bounds,
+            cornerRadius: containerView.layer.cornerRadius
+        ).cgPath
     }
     
     override func setHighlighted(_ highlighted: Bool, animated: Bool) {
