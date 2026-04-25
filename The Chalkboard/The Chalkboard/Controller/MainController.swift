@@ -235,7 +235,17 @@ private extension MainController {
     
     func presentItemDetail(at indexPath: IndexPath) {
         let item = itemViewModel.items[indexPath.row]
-        let detailVC = ItemDetailSheetViewController(item: item)
+        let detailVC = ItemDetailSheetViewController(
+            item: item,
+            onToggleCompleted: { [weak self, weak tableView] isCompleted in
+                guard let self, let tableView else { return }
+                self.itemViewModel.items[indexPath.row].isCompleted = isCompleted
+                tableView.reloadRows(at: [indexPath], with: .automatic)
+            },
+            onEdit: { [weak self] in
+                self?.presentEditItem(at: indexPath)
+            }
+        )
         
         detailVC.modalPresentationStyle = .pageSheet
         if #available(iOS 15.0, *) {
