@@ -16,18 +16,30 @@ struct HomeView: View {
             VStack {
                 TagTextEditor(viewModel: viewModel)
                 
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(viewModel.rows, id:\.self) { rows in
-                        HStack(spacing: 6) {
-                            ForEach(rows) { row in
-                                TagView(row: row, viewModel: viewModel)
+                switch viewModel.viewState {
+                case .empty:
+                    Text("No tags yet. Add one above.")
+                        .foregroundColor(.secondary)
+                        .font(.body)
+                        .padding(.top, 24)
+                    
+                case .loaded:
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(viewModel.rows, id:\.self) { rows in
+                            HStack(spacing: 6) {
+                                ForEach(rows) { row in
+                                    TagView(row: row, viewModel: viewModel)
+                                }
                             }
+                            .frame(height: 28)
+                            .padding(.bottom, 10)
                         }
-                        .frame(height: 28)
-                        .padding(.bottom, 10)
                     }
+                    .padding(24)
+                    
+                default:
+                    EmptyView()
                 }
-                .padding(24)
                 .navigationTitle("The New Chalkboard")
                 Spacer()
             }

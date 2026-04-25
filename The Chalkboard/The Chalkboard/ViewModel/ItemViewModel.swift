@@ -10,4 +10,8 @@ import UIKit
 class ItemViewModel {
     var items = [ChalkboardItem]()
     var isOpen = false
+    
+    var viewState: ViewState<[ChalkboardItem]> {
+        items.isEmpty ? .empty : .loaded(items)
+    }
 }

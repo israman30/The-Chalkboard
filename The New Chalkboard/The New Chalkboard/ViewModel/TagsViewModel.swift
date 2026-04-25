@@ -22,6 +22,10 @@ class TagsViewModel: TagsProtocol {
     @Published var tags: [TagModel] = []
     @Published var tagInputText = ""
     
+    var viewState: ViewState<[TagModel]> {
+        tags.isEmpty ? .empty : .loaded(tags)
+    }
+    
     init() {
         tags = [
             TagModel(name: "Xcode"),

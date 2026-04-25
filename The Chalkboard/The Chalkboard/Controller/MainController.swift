@@ -49,6 +49,7 @@ class MainController: UIViewController {
         textField.addTarget(self, action: #selector(input), for: .editingChanged)
         setMainUI()
         tableView.reloadData()
+        applyViewState()
     }
 
     private func updateInputToggleButton() {
@@ -83,6 +84,7 @@ class MainController: UIViewController {
 
             let newIndex = self.itemViewModel.items.count
             self.itemViewModel.items.append(ChalkboardItem(text: inputText, date: selectedDate))
+            self.applyViewState()
 
             let indexPath = IndexPath(row: newIndex, section: 0)
             DispatchQueue.main.async {
@@ -171,6 +173,7 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
             }
             
             self.itemViewModel.items.remove(at: indexPath.row)
+            applyViewState()
             
             tableView.performBatchUpdates {
                 tableView.deleteRows(at: [indexPath], with: .automatic)
@@ -209,6 +212,55 @@ extension MainController: PresentPickerProtocol {
 }
 
 private extension MainController {
+    func applyViewState() {
+        switch itemViewModel.viewState {
+        case .empty:
+            tableView.backgroundView = makeEmptyStateView()
+        case .loaded:
+            tableView.backgroundView = nil
+        default:
+            tableView.backgroundView = nil
+        }
+    }
+    
+    func makeEmptyStateView() -> UIView {
+        let container = UIView()
+        
+        let imageView = UIImageView(image: UIImage(systemName: "square.and.pencil"))
+        imageView.tintColor = .secondaryLabel
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let label = UILabel()
+        label.text = "No items yet.\nTap + to add your first one."
+        label.textColor = .secondaryLabel
+        label.font = .preferredFont(forTextStyle: .body)
+        label.adjustsFontForContentSizeCategory = true
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        
+        let stack = UIStackView(arrangedSubviews: [imageView, label])
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 12
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        
+        container.addSubview(stack)
+        
+        NSLayoutConstraint.activate([
+            imageView.heightAnchor.constraint(equalToConstant: 34),
+            imageView.widthAnchor.constraint(equalToConstant: 34),
+            
+            stack.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+            stack.leadingAnchor.constraint(greaterThanOrEqualTo: container.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(lessThanOrEqualTo: container.trailingAnchor, constant: -20)
+        ])
+        
+        return container
+    }
+    
     func presentEditItem(at indexPath: IndexPath) {
         let item = itemViewModel.items[indexPath.row]
         
