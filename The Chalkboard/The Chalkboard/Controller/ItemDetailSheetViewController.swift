@@ -40,11 +40,7 @@ final class ItemDetailSheetViewController: UIViewController {
         return df
     }()
 
-    init(
-        item: ChalkboardItem,
-        onToggleCompleted: ((Bool) -> Void)? = nil,
-        onEdit: (() -> Void)? = nil
-    ) {
+    init(item: ChalkboardItem, onToggleCompleted: ((Bool) -> Void)? = nil, onEdit: (() -> Void)? = nil) {
         self.item = item
         self.onToggleCompleted = onToggleCompleted
         self.onEdit = onEdit
