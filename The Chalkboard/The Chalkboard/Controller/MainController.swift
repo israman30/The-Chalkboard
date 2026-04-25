@@ -153,14 +153,6 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: Cell.mainCell.rawValue, for: indexPath) as! MainCell
         cell.bind(itemViewModel.items[indexPath.row])
-        cell.onEditTapped = { [weak self, weak tableView] cell in
-            guard
-                let self,
-                let tableView,
-                let indexPath = tableView.indexPath(for: cell)
-            else { return }
-            self.presentEditItem(at: indexPath)
-        }
         cell.onDetailTapped = { [weak self, weak tableView] cell in
             guard
                 let self,
@@ -353,8 +345,23 @@ private extension MainController {
                 }
                 tableView.reloadRows(at: [indexPath], with: .automatic)
             },
-            onEdit: { [weak self] in
-                self?.presentEditItem(at: indexPath)
+            onUpdate: { [weak self, weak tableView] updatedText, updatedDate in
+                guard let self, let tableView else { return }
+
+                let existing = self.itemViewModel.items[indexPath.row]
+                do {
+                    // UPDATE: Persist changes coming from the detail sheet.
+                    let updated = try self.itemStore.update(
+                        id: existing.id,
+                        text: updatedText,
+                        date: updatedDate,
+                        isCompleted: existing.isCompleted
+                    )
+                    self.itemViewModel.items[indexPath.row] = updated
+                    tableView.reloadRows(at: [indexPath], with: .automatic)
+                } catch {
+                    assertionFailure("Failed to update item: \(error)")
+                }
             }
         )
         

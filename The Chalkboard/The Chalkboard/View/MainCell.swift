@@ -17,7 +17,6 @@ protocol CellProtocol {
 
 final class MainCell: UITableViewCell, CellProtocol {
     
-    var onEditTapped: ((MainCell) -> Void)?
     var onDetailTapped: ((MainCell) -> Void)?
     var onTitleTapped: ((MainCell) -> Void)?
     
@@ -48,18 +47,6 @@ final class MainCell: UITableViewCell, CellProtocol {
         label.adjustsFontForContentSizeCategory = true
         label.textColor = .label
         return label
-    }()
-    
-    private let editButton: UIButton = {
-        let button = UIButton(type: .system)
-        var configuration = UIButton.Configuration.plain()
-        configuration.image = UIImage(systemName: "pencil")
-        configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-        configuration.baseForegroundColor = .secondaryLabel
-        configuration.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
-        button.configuration = configuration
-        button.accessibilityLabel = "Edit item"
-        return button
     }()
     
     private let detailButton: UIButton = {
@@ -142,7 +129,6 @@ final class MainCell: UITableViewCell, CellProtocol {
         
         containerView.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        editButton.translatesAutoresizingMaskIntoConstraints = false
         detailButton.translatesAutoresizingMaskIntoConstraints = false
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
         metaRowStack.translatesAutoresizingMaskIntoConstraints = false
@@ -156,13 +142,10 @@ final class MainCell: UITableViewCell, CellProtocol {
 
         metaRowStack.addArrangedSubview(dateLabel)
         metaRowStack.addArrangedSubview(spacer)
-        metaRowStack.addArrangedSubview(editButton)
         metaRowStack.addArrangedSubview(detailButton)
 
         dateLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
         dateLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        editButton.setContentHuggingPriority(.required, for: .horizontal)
-        editButton.setContentCompressionResistancePriority(.required, for: .horizontal)
         detailButton.setContentHuggingPriority(.required, for: .horizontal)
         detailButton.setContentCompressionResistancePriority(.required, for: .horizontal)
 
@@ -170,7 +153,6 @@ final class MainCell: UITableViewCell, CellProtocol {
         stackView.addArrangedSubview(metaRowStack)
         containerView.addSubview(stackView)
         
-        editButton.addTarget(self, action: #selector(didTapEdit), for: .touchUpInside)
         detailButton.addTarget(self, action: #selector(didTapDetail), for: .touchUpInside)
         
         titleLabel.isUserInteractionEnabled = true
@@ -196,7 +178,6 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        onEditTapped = nil
         onDetailTapped = nil
         onTitleTapped = nil
     }
@@ -230,10 +211,6 @@ final class MainCell: UITableViewCell, CellProtocol {
         } else {
             updates()
         }
-    }
-    
-    @objc private func didTapEdit() {
-        onEditTapped?(self)
     }
     
     @objc private func didTapDetail() {
