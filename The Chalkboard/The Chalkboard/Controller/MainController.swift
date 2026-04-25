@@ -62,16 +62,10 @@ class MainController: UIViewController {
     }
     
     @objc func input() {
-        guard let inputText = textField.text else { return }
-        if !inputText.isEmpty {
-            addButton.isEnabled = true
-            addButton.setTitleColor(UIColor.white, for: .normal)
-            addButton.backgroundColor = .greenColor
-        } else {
-            addButton.isEnabled = false
-            addButton.setTitleColor(UIColor.systemGray, for: .normal)
-            addButton.backgroundColor = .systemGray3
-        }
+        let hasInput = textField.text?.isEmpty == false
+        addButton.isEnabled = hasInput
+        addButton.setTitleColor(hasInput ? .white : .systemGray, for: .normal)
+        addButton.backgroundColor = hasInput ? .greenColor : .systemGray4
     }
     
     @objc func add() {
@@ -102,19 +96,20 @@ class MainController: UIViewController {
     }
     
     @objc func openInput() {
+        itemViewModel.isOpen.toggle()
+        
+        inputHeightConstrain?.constant = itemViewModel.isOpen ? 50 : 0
+        addButton.setTitle(itemViewModel.isOpen ? "Add" : "", for: .normal)
+        
         if !itemViewModel.isOpen {
-            itemViewModel.isOpen = true
-            inputHeightConstrain?.constant = 50.0
-            addButton.setTitle("Add", for: .normal)
-        } else {
-            itemViewModel.isOpen = false
-            inputHeightConstrain?.constant = 0.0
-            addButton.setTitle("", for: .normal)
             view.endEditing(true)
         }
-
         updateInputToggleButton()
-        UIView.animate(withDuration: 0.2, delay: 0.0) {
+        animateLayout()
+    }
+    
+    private func animateLayout() {
+        UIView.animate(withDuration: 0.2) {
             self.view.layoutIfNeeded()
         }
     }
