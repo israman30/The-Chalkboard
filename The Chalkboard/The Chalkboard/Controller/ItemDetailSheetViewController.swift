@@ -7,10 +7,21 @@
 
 import UIKit
 
+protocol ItemDetailSheetProtocol {
+    var item: ChalkboardItem { get set }
+}
+
+protocol ItemDetailSheetEventProtocol {
+    var onToggleCompleted: ((Bool) -> Void)? { get set }
+    var onUpdate: ((String, Date) -> Void)? { get set }
+}
+
+extension ItemDetailSheetViewController: ItemDetailSheetProtocol, ItemDetailSheetEventProtocol { }
+
 final class ItemDetailSheetViewController: UIViewController {
-    private var item: ChalkboardItem
-    private let onToggleCompleted: ((Bool) -> Void)?
-    private let onUpdate: ((String, Date) -> Void)?
+    var item: ChalkboardItem
+    var onToggleCompleted: ((Bool) -> Void)?
+    var onUpdate: ((String, Date) -> Void)?
     private let centeredCardTransition = CenteredCardTransitioningDelegate()
 
     private var draftText: String
@@ -52,11 +63,7 @@ final class ItemDetailSheetViewController: UIViewController {
         return df
     }()
 
-    init(
-        item: ChalkboardItem,
-        onToggleCompleted: ((Bool) -> Void)? = nil,
-        onUpdate: ((String, Date) -> Void)? = nil
-    ) {
+    init(item: ChalkboardItem, onToggleCompleted: ((Bool) -> Void)? = nil, onUpdate: ((String, Date) -> Void)? = nil) {
         self.item = item
         self.onToggleCompleted = onToggleCompleted
         self.onUpdate = onUpdate
