@@ -7,6 +7,21 @@
 
 import UIKit
 
+enum ViewState<Value> {
+    case idle
+    case loading
+    case empty
+    case loaded(Value)
+    case error(String)
+}
+
+extension ViewState {
+    var value: Value? {
+        if case let .loaded(value) = self { return value }
+        return nil
+    }
+}
+
 extension UIColor {
     static var greenColor = UIColor(red: 77/255, green: 125/255, blue: 90/255, alpha: 1)
 }

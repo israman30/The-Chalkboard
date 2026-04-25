@@ -37,6 +37,8 @@ Temporary Items
 ### Xcode ###
 ## User settings
 xcuserdata/
+*.xcuserstate
+UserInterfaceState.xcuserstate
 
 ## Xcode 8 and earlier
 *.xcscmblueprint

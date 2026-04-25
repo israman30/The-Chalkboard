@@ -1,0 +1,67 @@
+{
+  "buildCommand" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildOnly"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "73bb6edbd30492818d6d7b182f8c06e45e358aa41cdf5ed2252f086df7543ba3"
+    }
+  ],
+  "containerPath" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard.xcodeproj",
+  "continueBuildingAfterErrors" : false,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "activeArchitecture" : "undefined_arch",
+    "activeRunDestination" : {
+      "disableOnlyActiveArch" : true,
+      "hostTargetedPlatform" : null,
+      "platform" : "iphonesimulator",
+      "sdk" : "iphonesimulator26.4",
+      "sdkVariant" : "iphonesimulator",
+      "supportedArchitectures" : [
+        "i386",
+        "x86_64"
+      ],
+      "targetArchitecture" : "undefined_arch"
+    },
+    "arenaInfo" : {
+      "buildIntermediatesPath" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataLocalBuild/Build/Intermediates.noindex",
+      "buildProductsPath" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataLocalBuild/Build/Products",
+      "derivedDataPath" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataLocalBuild",
+      "indexDataStoreFolderPath" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataLocalBuild/Index.noindex/DataStore",
+      "indexEnableDataStore" : true,
+      "indexPCHPath" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataLocalBuild/Index.noindex/PrecompiledHeaders",
+      "pchPath" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataLocalBuild/Build/Intermediates.noindex/PrecompiledHeaders"
+    },
+    "configurationName" : "Debug",
+    "overrides" : {
+      "commandLine" : {
+        "table" : {
+          "CODE_SIGNING_ALLOWED" : "NO",
+          "SDKROOT" : "iphonesimulator26.4"
+        }
+      },
+      "synthesized" : {
+        "table" : {
+          "ACTION" : "build",
+          "CLANG_COVERAGE_MAPPING" : "YES",
+          "CLANG_PROFILE_DATA_DIRECTORY" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataLocalBuild/Build/ProfileData",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "YES",
+          "ONLY_ACTIVE_ARCH" : "YES"
+        }
+      }
+    }
+  },
+  "schemeCommand" : "launch",
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : true,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : true
+}

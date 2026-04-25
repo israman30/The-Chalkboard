@@ -7,6 +7,21 @@
 
 import SwiftUI
 
+enum ViewState<Value> {
+    case idle
+    case loading
+    case empty
+    case loaded(Value)
+    case error(String)
+}
+
+extension ViewState {
+    var value: Value? {
+        if case let .loaded(value) = self { return value }
+        return nil
+    }
+}
+
 extension UIScreen {
     static let screenWidth = UIScreen.main.bounds.width
 }
