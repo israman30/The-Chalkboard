@@ -1,5 +1,13 @@
 import CoreData
 
+/// App-wide Core Data stack.
+///
+/// The goal of this type is to centralize Core Data configuration and provide a single
+/// `NSPersistentContainer` + `viewContext` that can be reused across the app.
+///
+/// Notes:
+/// - The container name **must** match your `.xcdatamodeld` file (`ChalkboardModel`).
+/// - In Xcode Previews we use an in-memory store so previews don't write to disk.
 final class PersistenceController {
     static let shared: PersistenceController = {
         let isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
@@ -27,16 +35,20 @@ final class PersistenceController {
             }
         }
 
+        // Favor in-memory changes when the same object is edited in multiple contexts.
         container.viewContext.mergePolicy = NSMergeByPropertyObjectTrumpMergePolicy
+        // Keeps `viewContext` up to date when background contexts save.
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
 
+    /// Saves the given context (or `viewContext`) only if there are changes.
     func saveIfNeeded(context: NSManagedObjectContext? = nil) throws {
         let ctx = context ?? viewContext
         guard ctx.hasChanges else { return }
         try ctx.save()
     }
 
+    /// Runs work on a background context owned by the container.
     func performBackgroundTask(_ block: @escaping (NSManagedObjectContext) -> Void) {
         container.performBackgroundTask(block)
     }

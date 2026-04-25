@@ -39,6 +39,8 @@ class MainController: UIViewController {
     
     var itemViewModel = ItemViewModel()
 
+    /// Persistence-backed store used for all CRUD in this controller.
+    /// Keeping Core Data behind `ChalkboardItemStoring` prevents Core Data from leaking into UI code.
     private let itemStore: ChalkboardItemStoring = ChalkboardItemStore.shared
     
     var inputHeightConstrain: NSLayoutConstraint?
@@ -50,12 +52,14 @@ class MainController: UIViewController {
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
         textField.addTarget(self, action: #selector(input), for: .editingChanged)
         setMainUI()
+        // READ: Load persisted items from Core Data.
         loadItems()
         applyViewState()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        // READ: Refresh from disk in case another screen changed items.
         loadItems()
     }
 
@@ -99,6 +103,7 @@ class MainController: UIViewController {
             self.input()
 
             do {
+                // CREATE: Persist the new item, then append to the in-memory list driving the table view.
                 let newItem = try self.itemStore.create(text: inputText, date: selectedDate, isCompleted: false)
                 let newIndex = self.itemViewModel.items.count
                 self.itemViewModel.items.append(newItem)
@@ -174,6 +179,7 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
             self.itemViewModel.items[indexPath.row].isCompleted.toggle()
             let updated = self.itemViewModel.items[indexPath.row]
             do {
+                // UPDATE: Persist the completion toggle.
                 _ = try self.itemStore.setCompleted(id: updated.id, isCompleted: updated.isCompleted)
             } catch {
                 assertionFailure("Failed to update completion: \(error)")
@@ -201,6 +207,7 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
 
             let item = self.itemViewModel.items[indexPath.row]
             do {
+                // DELETE: Remove from Core Data first, then update the table view.
                 try self.itemStore.delete(id: item.id)
                 self.itemViewModel.items.remove(at: indexPath.row)
                 applyViewState()
@@ -306,6 +313,7 @@ private extension MainController {
             guard let self else { return }
             let existing = self.itemViewModel.items[indexPath.row]
             do {
+                // UPDATE: Persist changes from the edit sheet.
                 let updated = try self.itemStore.update(
                     id: existing.id,
                     text: updatedText,
@@ -338,6 +346,7 @@ private extension MainController {
                 self.itemViewModel.items[indexPath.row].isCompleted = isCompleted
                 let updated = self.itemViewModel.items[indexPath.row]
                 do {
+                    // UPDATE: Persist completion toggle coming from the detail sheet.
                     _ = try self.itemStore.setCompleted(id: updated.id, isCompleted: updated.isCompleted)
                 } catch {
                     assertionFailure("Failed to update completion: \(error)")

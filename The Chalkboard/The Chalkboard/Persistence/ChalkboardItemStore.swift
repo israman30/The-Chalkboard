@@ -1,5 +1,9 @@
 import CoreData
 
+/// Minimal CRUD surface used by the UI layer.
+///
+/// This protocol makes it easy to swap the backing store later (e.g. mock store for tests),
+/// while keeping the UI code focused on app behavior rather than Core Data APIs.
 protocol ChalkboardItemStoring {
     func fetchAll() throws -> [ChalkboardItem]
     func create(text: String, date: Date, isCompleted: Bool) throws -> ChalkboardItem
@@ -8,6 +12,11 @@ protocol ChalkboardItemStoring {
     func delete(id: UUID) throws
 }
 
+/// Core Data-backed implementation of `ChalkboardItemStoring`.
+///
+/// This store converts between:
+/// - `CDChalkboardItem` (Core Data) and
+/// - `ChalkboardItem` (value-type domain model used by the UI).
 final class ChalkboardItemStore: ChalkboardItemStoring {
     static let shared = ChalkboardItemStore()
 
@@ -17,6 +26,9 @@ final class ChalkboardItemStore: ChalkboardItemStoring {
         self.persistence = persistence
     }
 
+    // MARK: - Read
+
+    /// Fetches all items ordered by creation time (`sortOrder`).
     func fetchAll() throws -> [ChalkboardItem] {
         let request = CDChalkboardItem.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "sortOrder", ascending: true)]
@@ -25,10 +37,13 @@ final class ChalkboardItemStore: ChalkboardItemStoring {
         return results.map { $0.toDomain() }
     }
 
+    // MARK: - Create
+
     func create(text: String, date: Date, isCompleted: Bool = false) throws -> ChalkboardItem {
         let ctx = persistence.viewContext
 
         let item = CDChalkboardItem(context: ctx)
+        // Stored as a String (UUID attributes require older model formats in some toolchains).
         item.id = UUID().uuidString
         item.text = text
         item.date = date
@@ -38,6 +53,8 @@ final class ChalkboardItemStore: ChalkboardItemStoring {
         try persistence.saveIfNeeded()
         return item.toDomain()
     }
+
+    // MARK: - Update
 
     func update(id: UUID, text: String, date: Date, isCompleted: Bool) throws -> ChalkboardItem {
         let ctx = persistence.viewContext
@@ -51,6 +68,8 @@ final class ChalkboardItemStore: ChalkboardItemStoring {
         return item.toDomain()
     }
 
+    // MARK: - Update (partial)
+
     func setCompleted(id: UUID, isCompleted: Bool) throws -> ChalkboardItem {
         let ctx = persistence.viewContext
         let item = try fetchEntity(id: id, in: ctx)
@@ -60,6 +79,8 @@ final class ChalkboardItemStore: ChalkboardItemStoring {
         try persistence.saveIfNeeded()
         return item.toDomain()
     }
+
+    // MARK: - Delete
 
     func delete(id: UUID) throws {
         let ctx = persistence.viewContext
