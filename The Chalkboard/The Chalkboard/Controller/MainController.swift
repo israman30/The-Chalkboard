@@ -125,22 +125,19 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: Cell.mainCell.rawValue, for: indexPath) as! MainCell
         cell.bind(itemViewModel.items[indexPath.row])
+        cell.onEditTapped = { [weak self, weak tableView] cell in
+            guard
+                let self,
+                let tableView,
+                let indexPath = tableView.indexPath(for: cell)
+            else { return }
+            self.presentEditItem(at: indexPath)
+        }
         return cell
     }
     
     func tableView(_ tableView: UITableView, estimatedHeightForFooterInSection section: Int) -> CGFloat {
         return UITableView.automaticDimension
-    }
-
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-
-        let item = itemViewModel.items[indexPath.row]
-        presentDatePicker(title: "Update date added", initialDate: item.date) { [weak self] selectedDate in
-            guard let self else { return }
-            self.itemViewModel.items[indexPath.row].date = selectedDate
-            self.tableView.reloadRows(at: [indexPath], with: .automatic)
-        }
     }
     
     func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
@@ -189,6 +186,32 @@ extension MainController: PresentPickerProtocol {
             }
         }
         present(pickerVC, animated: true)
+    }
+}
+
+private extension MainController {
+    func presentEditItem(at indexPath: IndexPath) {
+        let item = itemViewModel.items[indexPath.row]
+        
+        let editVC = EditItemSheetViewController(
+            titleText: "Update item",
+            initialText: item.text,
+            initialDate: item.date
+        ) { [weak self] updatedText, updatedDate in
+            guard let self else { return }
+            self.itemViewModel.items[indexPath.row].text = updatedText
+            self.itemViewModel.items[indexPath.row].date = updatedDate
+            self.tableView.reloadRows(at: [indexPath], with: .automatic)
+        }
+        
+        editVC.modalPresentationStyle = .pageSheet
+        if #available(iOS 15.0, *) {
+            if let sheet = editVC.sheetPresentationController {
+                sheet.detents = [.medium(), .large()]
+                sheet.prefersGrabberVisible = true
+            }
+        }
+        present(editVC, animated: true)
     }
 }
 

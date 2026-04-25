@@ -17,6 +17,8 @@ protocol CellProtocol {
 
 final class MainCell: UITableViewCell, CellProtocol {
     
+    var onEditTapped: ((MainCell) -> Void)?
+    
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .secondarySystemBackground
@@ -46,6 +48,16 @@ final class MainCell: UITableViewCell, CellProtocol {
         return label
     }()
     
+    private let editButton: UIButton = {
+        let button = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
+        button.setImage(UIImage(systemName: "pencil", withConfiguration: config), for: .normal)
+        button.tintColor = .secondaryLabel
+        button.accessibilityLabel = "Edit item"
+        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        return button
+    }()
+    
     private let dateLabel: UILabel = {
         let label = UILabel()
         label.textColor = .secondaryLabel
@@ -53,6 +65,14 @@ final class MainCell: UITableViewCell, CellProtocol {
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 1
         return label
+    }()
+    
+    private let titleRowStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.spacing = 10
+        sv.alignment = .top
+        return sv
     }()
     
     private let stackView: UIStackView = {
@@ -84,14 +104,23 @@ final class MainCell: UITableViewCell, CellProtocol {
         
         containerView.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        editButton.translatesAutoresizingMaskIntoConstraints = false
         dateLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleRowStack.translatesAutoresizingMaskIntoConstraints = false
         stackView.translatesAutoresizingMaskIntoConstraints = false
 
         contentView.addSubview(containerView)
         
-        stackView.addArrangedSubview(titleLabel)
+        titleRowStack.addArrangedSubview(titleLabel)
+        titleRowStack.addArrangedSubview(editButton)
+        editButton.setContentHuggingPriority(.required, for: .horizontal)
+        editButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+        
+        stackView.addArrangedSubview(titleRowStack)
         stackView.addArrangedSubview(dateLabel)
         containerView.addSubview(stackView)
+        
+        editButton.addTarget(self, action: #selector(didTapEdit), for: .touchUpInside)
         
         NSLayoutConstraint.activate([
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
@@ -108,6 +137,11 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        onEditTapped = nil
     }
 
     override func layoutSubviews() {
@@ -139,6 +173,10 @@ final class MainCell: UITableViewCell, CellProtocol {
         } else {
             updates()
         }
+    }
+    
+    @objc private func didTapEdit() {
+        onEditTapped?(self)
     }
 }
 

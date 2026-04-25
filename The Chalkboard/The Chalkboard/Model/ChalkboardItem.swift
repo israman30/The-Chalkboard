@@ -7,7 +7,7 @@
 import UIKit
 
 struct ChalkboardItem: Equatable {
-    let text: String
+    var text: String
     var date: Date
 }
 
