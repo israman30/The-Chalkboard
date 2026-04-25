@@ -384,3 +384,33 @@ private final class DatePickerSheetViewController: UIViewController {
         }
     }
 }
+
+#if DEBUG
+import SwiftUI
+
+@available(iOS 13.0, *)
+private struct MainControllerPreview: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UINavigationController {
+        let vc = MainController()
+        vc.items = [
+            ChalkboardItem(text: "Finish the UI polish for the chalkboard cells.", date: Date()),
+            ChalkboardItem(text: "Swipe left on a cell to delete it.", date: Calendar.current.date(byAdding: .day, value: -2, to: Date()) ?? Date()),
+            ChalkboardItem(text: "Tap a cell to update its date.", date: Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date())
+        ]
+        vc.loadViewIfNeeded()
+        vc.tableView.reloadData()
+        return UINavigationController(rootViewController: vc)
+    }
+
+    func updateUIViewController(_ uiViewController: UINavigationController, context: Context) {}
+}
+
+@available(iOS 13.0, *)
+struct MainController_Previews: PreviewProvider {
+    static var previews: some View {
+        MainControllerPreview()
+            .ignoresSafeArea()
+            .previewDisplayName("Main View")
+    }
+}
+#endif
