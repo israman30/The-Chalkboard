@@ -126,3 +126,69 @@ final class MainCell: UITableViewCell, CellProtocol {
         }
     }
 }
+
+#if DEBUG
+import SwiftUI
+
+@available(iOS 13.0, *)
+private struct MainCellTablePreview: UIViewRepresentable {
+    var items: [ChalkboardItem]
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(items: items)
+    }
+
+    func makeUIView(context: Context) -> UITableView {
+        let tableView = UITableView(frame: .zero, style: .plain)
+        tableView.register(MainCell.self, forCellReuseIdentifier: Cell.mainCell.rawValue)
+        tableView.dataSource = context.coordinator
+        tableView.delegate = context.coordinator
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 80
+        tableView.separatorStyle = .none
+        tableView.backgroundColor = .systemBackground
+        tableView.isScrollEnabled = false
+        return tableView
+    }
+
+    func updateUIView(_ uiView: UITableView, context: Context) {
+        context.coordinator.items = items
+        uiView.reloadData()
+        uiView.layoutIfNeeded()
+    }
+
+    final class Coordinator: NSObject, UITableViewDataSource, UITableViewDelegate {
+        var items: [ChalkboardItem]
+
+        init(items: [ChalkboardItem]) {
+            self.items = items
+        }
+
+        func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+            items.count
+        }
+
+        func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+            let cell = tableView.dequeueReusableCell(withIdentifier: Cell.mainCell.rawValue, for: indexPath) as! MainCell
+            cell.bind(items[indexPath.row])
+            return cell
+        }
+    }
+}
+
+@available(iOS 13.0, *)
+struct MainCell_InFile_Previews: PreviewProvider {
+    static var previews: some View {
+        MainCellTablePreview(items: [
+            ChalkboardItem(
+                text: "This is a preview of the improved cell UI with dynamic type and better spacing.",
+                date: Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+            )
+        ])
+        .previewLayout(.sizeThatFits)
+        .frame(width: 390, height: 200)
+        .padding()
+        .previewDisplayName("Main Cell")
+    }
+}
+#endif
