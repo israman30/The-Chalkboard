@@ -9,5 +9,6 @@ import UIKit
 struct ChalkboardItem: Equatable {
     var text: String
     var date: Date
+    var isCompleted: Bool = false
 }
 

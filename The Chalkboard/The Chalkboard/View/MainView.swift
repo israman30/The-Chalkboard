@@ -27,9 +27,20 @@ extension MainController {
         tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 16, right: 0)
         
         let stackView = UIStackView(arrangedSubviews: [textField, addButton])
-        stackView.distribution = .fillProportionally
+        // Keep the Add button from shrinking when text is long.
+        stackView.distribution = .fill
         stackView.axis = .horizontal
+        stackView.spacing = 10
         stackView.translatesAutoresizingMaskIntoConstraints = false
+
+        addButton.setContentHuggingPriority(.required, for: .horizontal)
+        addButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+        textField.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        textField.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        NSLayoutConstraint.activate([
+            addButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 72)
+        ])
         
         view.addSubview(tableView)
         view.addSubview(stackView)

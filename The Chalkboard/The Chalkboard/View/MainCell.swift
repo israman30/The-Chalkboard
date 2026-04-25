@@ -18,6 +18,7 @@ protocol CellProtocol {
 final class MainCell: UITableViewCell, CellProtocol {
     
     var onEditTapped: ((MainCell) -> Void)?
+    var onTitleTapped: ((MainCell) -> Void)?
     
     private let containerView: UIView = {
         let view = UIView()
@@ -50,11 +51,13 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     private let editButton: UIButton = {
         let button = UIButton(type: .system)
-        let config = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-        button.setImage(UIImage(systemName: "pencil", withConfiguration: config), for: .normal)
-        button.tintColor = .secondaryLabel
+        var configuration = UIButton.Configuration.plain()
+        configuration.image = UIImage(systemName: "pencil")
+        configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
+        configuration.baseForegroundColor = .secondaryLabel
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+        button.configuration = configuration
         button.accessibilityLabel = "Edit item"
-        button.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
         return button
     }()
     
@@ -91,9 +94,31 @@ final class MainCell: UITableViewCell, CellProtocol {
     }()
     
     func bind(_ item: ChalkboardItem) {
-        titleLabel.text = item.text
-        dateLabel.text = "Added \(Self.dateFormatter.string(from: item.date))"
-        accessibilityLabel = "\(item.text). Added \(Self.dateFormatter.string(from: item.date))"
+        let titleAttributes: [NSAttributedString.Key: Any] = {
+            if item.isCompleted {
+                return [
+                    .font: titleLabel.font as Any,
+                    .foregroundColor: UIColor.secondaryLabel,
+                    .strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                    .strikethroughColor: UIColor.secondaryLabel
+                ]
+            } else {
+                return [
+                    .font: titleLabel.font as Any,
+                    .foregroundColor: UIColor.label
+                ]
+            }
+        }()
+
+        titleLabel.attributedText = NSAttributedString(string: item.text, attributes: titleAttributes)
+        let addedText = Self.dateFormatter.string(from: item.date)
+        dateLabel.text = "Added \(addedText)"
+        
+        if item.isCompleted {
+            accessibilityLabel = "\(item.text). Completed. Added \(addedText)"
+        } else {
+            accessibilityLabel = "\(item.text). Added \(addedText)"
+        }
     }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -122,6 +147,10 @@ final class MainCell: UITableViewCell, CellProtocol {
         
         editButton.addTarget(self, action: #selector(didTapEdit), for: .touchUpInside)
         
+        titleLabel.isUserInteractionEnabled = true
+        titleLabel.accessibilityTraits.insert(.button)
+        titleLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapTitle)))
+        
         NSLayoutConstraint.activate([
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
             containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
@@ -142,6 +171,7 @@ final class MainCell: UITableViewCell, CellProtocol {
     override func prepareForReuse() {
         super.prepareForReuse()
         onEditTapped = nil
+        onTitleTapped = nil
     }
 
     override func layoutSubviews() {
@@ -177,6 +207,10 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     @objc private func didTapEdit() {
         onEditTapped?(self)
+    }
+    
+    @objc private func didTapTitle() {
+        onTitleTapped?(self)
     }
 }
 

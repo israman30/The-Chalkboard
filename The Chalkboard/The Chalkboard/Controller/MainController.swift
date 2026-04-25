@@ -133,6 +133,17 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
             else { return }
             self.presentEditItem(at: indexPath)
         }
+        cell.onTitleTapped = { [weak self, weak tableView] cell in
+            guard
+                let self,
+                let tableView,
+                let indexPath = tableView.indexPath(for: cell)
+            else { return }
+            
+            self.itemViewModel.items[indexPath.row].isCompleted.toggle()
+            tableView.reloadRows(at: [indexPath], with: .automatic)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        }
         return cell
     }
     
