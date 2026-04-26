@@ -189,7 +189,12 @@ class MainController: UIViewController {
 
 }
 
-private extension MainController {
+protocol InputHeightProtocol {
+    func preferredOpenInputHeight() -> CGFloat
+    func updateInputHeight(animated: Bool)
+}
+
+extension MainController: InputHeightProtocol {
     func preferredOpenInputHeight() -> CGFloat {
         // When opening, start at least at the minimum height and grow if there's existing text.
         updateInputHeight(animated: false)
@@ -327,7 +332,17 @@ extension MainController: PresentPickerProtocol {
     }
 }
 
-private extension MainController {
+protocol StateControllerProtocol {
+    func applyViewState()
+    func makeEmptyStateView() -> UIView
+}
+
+protocol PresentViewProtocol {
+    func presentEditItem(at indexPath: IndexPath)
+    func presentItemDetail(at indexPath: IndexPath)
+}
+
+extension MainController: StateControllerProtocol, PresentViewProtocol {
     func applyViewState() {
         switch itemViewModel.viewState {
         case .empty:
