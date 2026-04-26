@@ -51,7 +51,7 @@ extension MainController {
         // Keep the Add button from shrinking when text is long.
         inputBarStackView.distribution = .fill
         inputBarStackView.axis = .horizontal
-        inputBarStackView.alignment = .top
+        inputBarStackView.alignment = .bottom
         inputBarStackView.spacing = 10
         inputBarStackView.translatesAutoresizingMaskIntoConstraints = false
         inputBarStackView.clipsToBounds = true
@@ -65,7 +65,7 @@ extension MainController {
 
         NSLayoutConstraint.activate([
             addButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 72),
-            addButton.heightAnchor.constraint(equalToConstant: 44),
+            addButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
             inputContainerView.heightAnchor.constraint(equalTo: inputBarStackView.heightAnchor)
         ])
         

@@ -57,11 +57,9 @@ class MainController: UIViewController {
     
     let addButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitleColor(UIColor.systemGray, for: .normal)
-        btn.titleLabel?.font = UIFont(name: "GillSans-Italic", size: 20)
-        btn.backgroundColor = .systemGray4
         btn.isEnabled = false
-        btn.layer.cornerRadius = 2
+        btn.clipsToBounds = true
+        btn.layer.cornerCurve = .continuous
         return btn
     }()
 
@@ -84,6 +82,7 @@ class MainController: UIViewController {
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
         inputTextView.delegate = self
         setMainUI()
+        configureAddButton()
         // READ: Load persisted items from Core Data.
         loadItems()
         applyViewState()
@@ -115,22 +114,32 @@ class MainController: UIViewController {
     }
     
     @objc func input() {
+        guard itemViewModel.isOpen else {
+            inputPlaceholderLabel.isHidden = true
+            addButton.isEnabled = false
+            updateAddButtonPresentation(animated: false)
+            return
+        }
+
         let trimmed = (inputTextView.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let hasInput = !trimmed.isEmpty
 
         inputPlaceholderLabel.isHidden = !trimmed.isEmpty
         addButton.isEnabled = hasInput
-        addButton.setTitleColor(hasInput ? .white : .systemGray, for: .normal)
-        addButton.backgroundColor = hasInput ? .greenColor : .systemGray4
+        updateAddButtonPresentation(animated: true)
 
         updateInputHeight(animated: true)
     }
     
     @objc func add() {
+        guard itemViewModel.isOpen else { return }
+        guard presentedViewController == nil else { return }
+
         let rawText = inputTextView.text ?? ""
         let inputText = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !inputText.isEmpty else { return }
 
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         view.endEditing(true)
 
         presentDatePicker(title: "Date added", initialDate: Date()) { [weak self] selectedDate in
@@ -152,9 +161,11 @@ class MainController: UIViewController {
                         self.tableView.insertRows(at: [indexPath], with: .automatic)
                     } completion: { _ in
                         self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
                     }
                 }
             } catch {
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
                 assertionFailure("Failed to create item: \(error)")
             }
         }
@@ -164,17 +175,19 @@ class MainController: UIViewController {
         itemViewModel.isOpen.toggle()
         
         inputHeightConstrain?.constant = itemViewModel.isOpen ? preferredOpenInputHeight() : 0
-        addButton.setTitle(itemViewModel.isOpen ? "Add" : "", for: .normal)
+        updateAddButtonPresentation(animated: false)
         
         if !itemViewModel.isOpen {
             view.endEditing(true)
             // Prevent placeholder from flashing when the bar is collapsed to 0.
             inputPlaceholderLabel.isHidden = true
+            addButton.isEnabled = false
         }
         updateInputToggleButton()
         animateLayout()
 
         if itemViewModel.isOpen {
+            input()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) { [weak self] in
                 self?.inputTextView.becomeFirstResponder()
             }
@@ -187,6 +200,87 @@ class MainController: UIViewController {
         }
     }
 
+}
+
+private extension MainController {
+    func configureAddButton() {
+        addButton.accessibilityLabel = "Add"
+        addButton.accessibilityHint = "Adds the new item after selecting a date"
+        addButton.titleLabel?.adjustsFontForContentSizeCategory = true
+
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.filled()
+            config.cornerStyle = .capsule
+            config.image = UIImage(systemName: "plus")
+            config.imagePadding = 6
+            config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 14, bottom: 10, trailing: 14)
+            config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
+
+            if let base = UIFont(name: "GillSans-Italic", size: UIFont.preferredFont(forTextStyle: .headline).pointSize) {
+                let scaled = UIFontMetrics(forTextStyle: .headline).scaledFont(for: base)
+                config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                    var outgoing = incoming
+                    outgoing.font = scaled
+                    return outgoing
+                }
+            }
+            addButton.configuration = config
+
+            addButton.configurationUpdateHandler = { [weak self] button in
+                guard let self else { return }
+                var config = button.configuration ?? UIButton.Configuration.filled()
+
+                let showTitle = self.itemViewModel.isOpen
+                let enabled = button.isEnabled && showTitle
+                config.title = showTitle ? "Add" : ""
+                if enabled, button.isHighlighted {
+                    config.baseBackgroundColor = UIColor.greenColor.withAlphaComponent(0.85)
+                } else {
+                    config.baseBackgroundColor = enabled ? .greenColor : .systemGray4
+                }
+                config.baseForegroundColor = enabled ? .white : .systemGray
+                button.configuration = config
+            }
+        } else {
+            addButton.titleLabel?.font = UIFont(name: "GillSans-Italic", size: 20)
+            addButton.setTitle("Add", for: .normal)
+            addButton.setTitleColor(.systemGray, for: .normal)
+            addButton.setImage(UIImage(systemName: "plus"), for: .normal)
+            addButton.imageView?.contentMode = .scaleAspectFit
+            addButton.tintColor = .systemGray
+            addButton.semanticContentAttribute = .forceLeftToRight
+            addButton.contentHorizontalAlignment = .center
+            addButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 6, bottom: 0, right: -6)
+            addButton.backgroundColor = .systemGray4
+            addButton.layer.cornerRadius = 22
+            addButton.contentEdgeInsets = UIEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
+        }
+
+        updateAddButtonPresentation(animated: false)
+    }
+
+    func updateAddButtonPresentation(animated: Bool) {
+        let updates = {
+            if #available(iOS 15.0, *) {
+                self.addButton.setNeedsUpdateConfiguration()
+            } else {
+                let showTitle = self.itemViewModel.isOpen
+                self.addButton.setTitle(showTitle ? "Add" : "", for: .normal)
+
+                let enabled = self.addButton.isEnabled && showTitle
+                self.addButton.setTitleColor(enabled ? .white : .systemGray, for: .normal)
+                self.addButton.tintColor = enabled ? .white : .systemGray
+                self.addButton.backgroundColor = enabled ? .greenColor : .systemGray4
+                self.addButton.alpha = enabled ? 1.0 : 0.85
+            }
+        }
+
+        if animated {
+            UIView.transition(with: addButton, duration: 0.15, options: [.transitionCrossDissolve, .allowUserInteraction], animations: updates)
+        } else {
+            updates()
+        }
+    }
 }
 
 protocol InputHeightProtocol {
