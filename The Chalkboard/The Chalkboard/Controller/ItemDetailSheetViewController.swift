@@ -13,7 +13,7 @@ protocol ItemDetailSheetProtocol {
 
 protocol ItemDetailSheetEventProtocol {
     var onToggleCompleted: ((Bool) -> Void)? { get set }
-    var onUpdate: ((String, Date) -> Void)? { get set }
+    var onUpdate: ((String, Date, ChalkboardItemPrioritySeverity?) -> Void)? { get set }
 }
 
 extension ItemDetailSheetViewController: ItemDetailSheetProtocol, ItemDetailSheetEventProtocol { }
@@ -21,7 +21,7 @@ extension ItemDetailSheetViewController: ItemDetailSheetProtocol, ItemDetailShee
 final class ItemDetailSheetViewController: UIViewController {
     var item: ChalkboardItem
     var onToggleCompleted: ((Bool) -> Void)?
-    var onUpdate: ((String, Date) -> Void)?
+    var onUpdate: ((String, Date, ChalkboardItemPrioritySeverity?) -> Void)?
     private let centeredCardTransition = CenteredCardTransitioningDelegate()
 
     // Draft state decouples editing from persistence:
@@ -30,6 +30,7 @@ final class ItemDetailSheetViewController: UIViewController {
     // This also keeps “Cancel/Close” semantics intuitive.
     private var draftText: String
     private var draftDate: Date
+    private var draftPrioritySeverity: ChalkboardItemPrioritySeverity?
 
     private let scrollView = UIScrollView()
     private let contentStack = UIStackView()
@@ -47,6 +48,7 @@ final class ItemDetailSheetViewController: UIViewController {
 
     private let chipsRow = UIStackView()
     private let statusChip = ChipView()
+    private let priorityChip = ChipView()
     private let dateChip = ChipView()
     private let datePicker = UIDatePicker()
 
@@ -69,12 +71,17 @@ final class ItemDetailSheetViewController: UIViewController {
         return df
     }()
 
-    init(item: ChalkboardItem, onToggleCompleted: ((Bool) -> Void)? = nil, onUpdate: ((String, Date) -> Void)? = nil) {
+    init(
+        item: ChalkboardItem,
+        onToggleCompleted: ((Bool) -> Void)? = nil,
+        onUpdate: ((String, Date, ChalkboardItemPrioritySeverity?) -> Void)? = nil
+    ) {
         self.item = item
         self.onToggleCompleted = onToggleCompleted
         self.onUpdate = onUpdate
         self.draftText = item.text
         self.draftDate = item.date
+        self.draftPrioritySeverity = item.prioritySeverity
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .custom
         transitioningDelegate = centeredCardTransition
@@ -116,16 +123,42 @@ final class ItemDetailSheetViewController: UIViewController {
 
         item.text = trimmed
         item.date = draftDate
+        item.prioritySeverity = draftPrioritySeverity
         // “Draft becomes canonical” for this screen once saved.
         draftText = trimmed
         applyDraftTitleToLabel()
 
         view.endEditing(true)
-        onUpdate?(trimmed, draftDate)
+        onUpdate?(trimmed, draftDate, draftPrioritySeverity)
         UINotificationFeedbackGenerator().notificationOccurred(.success)
 
         updateSaveState()
         applyItemToUI(animated: true)
+    }
+
+    @objc private func didTapPriorityChip() {
+        let sheet = UIAlertController(title: "Priority", message: nil, preferredStyle: .actionSheet)
+
+        let apply: (ChalkboardItemPrioritySeverity?) -> Void = { [weak self] severity in
+            guard let self else { return }
+            self.draftPrioritySeverity = severity
+            self.updateSaveState()
+            self.applyItemToUI(animated: true)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        }
+
+        sheet.addAction(UIAlertAction(title: "None", style: .default) { _ in apply(nil) })
+        sheet.addAction(UIAlertAction(title: ChalkboardItemPrioritySeverity.low.title, style: .default) { _ in apply(.low) })
+        sheet.addAction(UIAlertAction(title: ChalkboardItemPrioritySeverity.medium.title, style: .default) { _ in apply(.medium) })
+        sheet.addAction(UIAlertAction(title: ChalkboardItemPrioritySeverity.high.title, style: .default) { _ in apply(.high) })
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let popover = sheet.popoverPresentationController {
+            popover.sourceView = priorityChip
+            popover.sourceRect = priorityChip.bounds
+        }
+
+        present(sheet, animated: true)
     }
 
     @objc private func didTapDateChip() {
@@ -319,9 +352,11 @@ private extension ItemDetailSheetViewController {
         chipsRow.distribution = .fillProportionally
 
         statusChip.setContentHuggingPriority(.required, for: .horizontal)
+        priorityChip.setContentHuggingPriority(.required, for: .horizontal)
         dateChip.setContentHuggingPriority(.required, for: .horizontal)
 
         chipsRow.addArrangedSubview(statusChip)
+        chipsRow.addArrangedSubview(priorityChip)
         chipsRow.addArrangedSubview(dateChip)
         chipsRow.addArrangedSubview(UIView())
 
@@ -329,6 +364,11 @@ private extension ItemDetailSheetViewController {
         dateChip.accessibilityTraits = [.button]
         dateChip.accessibilityHint = "Double tap to change the date"
         dateChip.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapDateChip)))
+
+        priorityChip.isUserInteractionEnabled = true
+        priorityChip.accessibilityTraits = [.button]
+        priorityChip.accessibilityHint = "Double tap to change the priority"
+        priorityChip.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapPriorityChip)))
 
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.datePickerMode = .date
@@ -493,6 +533,22 @@ private extension ItemDetailSheetViewController {
                 backgroundColor: UIColor.appElevatedSurface
             )
 
+            if let severity = self.draftPrioritySeverity {
+                self.priorityChip.configure(
+                    text: "Priority: \(severity.title)",
+                    systemImageName: severity.systemImageName,
+                    tintColor: severity.tintColor,
+                    backgroundColor: severity.tintColor.withAlphaComponent(0.16)
+                )
+            } else {
+                self.priorityChip.configure(
+                    text: "Priority: None",
+                    systemImageName: "flag",
+                    tintColor: .appTextSecondary,
+                    backgroundColor: UIColor.appElevatedSurface
+                )
+            }
+
             if self.item.isCompleted {
                 self.statusChip.configure(
                     text: "Completed",
@@ -534,9 +590,10 @@ private extension ItemDetailSheetViewController {
             }
 
             let labelText = self.draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let priorityText = self.draftPrioritySeverity.map { " Priority \($0.title)." } ?? ""
             self.view.accessibilityLabel = self.item.isCompleted
-                ? "\(labelText). Completed. Added \(addedText)"
-                : "\(labelText). Added \(addedText)"
+                ? "\(labelText). Completed.\(priorityText) Added \(addedText)"
+                : "\(labelText).\(priorityText) Added \(addedText)"
         }
 
         if animated {
@@ -553,7 +610,8 @@ private extension ItemDetailSheetViewController {
         let hasTextChange = trimmed != item.text
         // Only compare at day granularity so time components don’t accidentally enable “Save”.
         let hasDateChange = !Calendar.current.isDate(draftDate, inSameDayAs: item.date)
-        let canSave = hasText && (hasTextChange || hasDateChange)
+        let hasPriorityChange = draftPrioritySeverity != item.prioritySeverity
+        let canSave = hasText && (hasTextChange || hasDateChange || hasPriorityChange)
 
         saveButton.isEnabled = canSave
         saveButton.alpha = canSave ? 1.0 : 0.5

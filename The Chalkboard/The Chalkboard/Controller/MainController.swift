@@ -8,7 +8,7 @@
 import UIKit
 
 protocol PresentPickerProtocol {
-    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date) -> Void)
+    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date, ChalkboardItemPrioritySeverity?) -> Void)
 }
 
 class MainController: UIViewController {
@@ -163,7 +163,7 @@ class MainController: UIViewController {
         view.endEditing(true)
 
         // “Date added” is a user-controlled attribute, so we collect it up-front (before persisting).
-        presentDatePicker(title: "Date added", initialDate: Date()) { [weak self] selectedDate in
+        presentDatePicker(title: "Date added", initialDate: Date()) { [weak self] selectedDate, selectedPriority in
             guard let self else { return }
 
             self.inputTextView.text = ""
@@ -172,7 +172,12 @@ class MainController: UIViewController {
             do {
                 // Persist first, then update the in-memory list that drives the table view.
                 // This keeps the UI consistent with the store if persistence fails.
-                let newItem = try self.itemStore.create(text: inputText, date: selectedDate, isCompleted: false)
+                let newItem = try self.itemStore.create(
+                    text: inputText,
+                    date: selectedDate,
+                    isCompleted: false,
+                    prioritySeverity: selectedPriority
+                )
                 let newIndex = self.itemViewModel.items.count
                 self.itemViewModel.items.append(newItem)
                 self.applyViewState()
@@ -468,16 +473,17 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
 }
 
 extension MainController: PresentPickerProtocol {
-    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date) -> Void) {
+    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date, ChalkboardItemPrioritySeverity?) -> Void) {
         let pickerVC = DatePickerSheetViewController(
             titleText: title,
             initialDate: initialDate,
+            initialPrioritySeverity: nil,
             onPick: onPick
         )
         pickerVC.modalPresentationStyle = .pageSheet
         if #available(iOS 15.0, *) {
             if let sheet = pickerVC.sheetPresentationController {
-                sheet.detents = [.medium()]
+                sheet.detents = [.medium(), .large()]
                 sheet.prefersGrabberVisible = true
             }
         }
@@ -561,7 +567,8 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
                     id: existing.id,
                     text: updatedText,
                     date: updatedDate,
-                    isCompleted: existing.isCompleted
+                    isCompleted: existing.isCompleted,
+                    prioritySeverity: existing.prioritySeverity
                 )
                 self.itemViewModel.items[indexPath.row] = updated
                 self.tableView.reloadRows(at: [indexPath], with: .automatic)
@@ -595,26 +602,29 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
                     assertionFailure("Failed to update completion: \(error)")
                 }
                 tableView.reloadRows(at: [indexPath], with: .automatic)
-            },
-            onUpdate: { [weak self, weak tableView] updatedText, updatedDate in
-                guard let self, let tableView else { return }
-
-                let existing = self.itemViewModel.items[indexPath.row]
-                do {
-                    // Persist title/date edits coming from the detail sheet.
-                    let updated = try self.itemStore.update(
-                        id: existing.id,
-                        text: updatedText,
-                        date: updatedDate,
-                        isCompleted: existing.isCompleted
-                    )
-                    self.itemViewModel.items[indexPath.row] = updated
-                    tableView.reloadRows(at: [indexPath], with: .automatic)
-                } catch {
-                    assertionFailure("Failed to update item: \(error)")
-                }
             }
         )
+
+        detailVC.onUpdate = { [weak self, weak tableView] (updatedText: String, updatedDate: Date, updatedPriority: ChalkboardItemPrioritySeverity?) in
+            guard let self, let tableView else { return }
+
+            let existing = self.itemViewModel.items[indexPath.row]
+            do {
+                // Persist title/date/priority edits coming from the detail sheet.
+                let updated = try self.itemStore.update(
+                    id: existing.id,
+                    text: updatedText,
+                    date: updatedDate,
+                    isCompleted: existing.isCompleted,
+                    prioritySeverity: updatedPriority
+                )
+                self.itemViewModel.items[indexPath.row] = updated
+                tableView.reloadRows(at: [indexPath], with: .automatic)
+            } catch {
+                assertionFailure("Failed to update item: \(error)")
+            }
+        }
+
         present(detailVC, animated: true)
     }
 }

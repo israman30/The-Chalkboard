@@ -70,6 +70,19 @@ final class MainCell: UITableViewCell, CellProtocol {
         label.numberOfLines = 1
         return label
     }()
+
+    private let priorityTagLabel: PaddingLabel = {
+        let label = PaddingLabel()
+        label.insets = UIEdgeInsets(top: 4, left: 9, bottom: 4, right: 9)
+        label.font = .preferredFont(forTextStyle: .caption1)
+        label.adjustsFontForContentSizeCategory = true
+        label.numberOfLines = 1
+        label.layer.cornerRadius = 10
+        label.layer.cornerCurve = .continuous
+        label.layer.masksToBounds = true
+        label.accessibilityTraits.insert(.staticText)
+        return label
+    }()
     
     private let metaRowStack: UIStackView = {
         let sv = UIStackView()
@@ -115,11 +128,25 @@ final class MainCell: UITableViewCell, CellProtocol {
         titleLabel.attributedText = NSAttributedString(string: item.text, attributes: titleAttributes)
         let addedText = Self.dateFormatter.string(from: item.date)
         dateLabel.text = "Added \(addedText)"
+
+        if let severity = item.prioritySeverity {
+            priorityTagLabel.text = severity.title
+            priorityTagLabel.textColor = severity.tintColor
+            priorityTagLabel.backgroundColor = severity.tintColor.withAlphaComponent(0.16)
+            priorityTagLabel.accessibilityLabel = "Priority \(severity.title)"
+        } else {
+            priorityTagLabel.text = "None"
+            priorityTagLabel.textColor = .appTextSecondary
+            priorityTagLabel.backgroundColor = .appElevatedSurface
+            priorityTagLabel.accessibilityLabel = "Priority None"
+        }
+
+        let priorityText = item.prioritySeverity.map { ". Priority \($0.title)" } ?? ""
         
         if item.isCompleted {
-            accessibilityLabel = "\(item.text). Completed. Added \(addedText)"
+            accessibilityLabel = "\(item.text). Completed\(priorityText). Added \(addedText)"
         } else {
-            accessibilityLabel = "\(item.text). Added \(addedText)"
+            accessibilityLabel = "\(item.text)\(priorityText). Added \(addedText)"
         }
     }
     
@@ -143,11 +170,14 @@ final class MainCell: UITableViewCell, CellProtocol {
         spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         metaRowStack.addArrangedSubview(dateLabel)
+        metaRowStack.addArrangedSubview(priorityTagLabel)
         metaRowStack.addArrangedSubview(spacer)
         metaRowStack.addArrangedSubview(detailButton)
 
         dateLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
         dateLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        priorityTagLabel.setContentHuggingPriority(.required, for: .horizontal)
+        priorityTagLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         detailButton.setContentHuggingPriority(.required, for: .horizontal)
         detailButton.setContentCompressionResistancePriority(.required, for: .horizontal)
 
@@ -223,6 +253,24 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     @objc private func didTapTitle() {
         onTitleTapped?(self)
+    }
+}
+
+private final class PaddingLabel: UILabel {
+    var insets: UIEdgeInsets = .zero {
+        didSet { invalidateIntrinsicContentSize() }
+    }
+
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: rect.inset(by: insets))
+    }
+
+    override var intrinsicContentSize: CGSize {
+        let size = super.intrinsicContentSize
+        return CGSize(
+            width: size.width + insets.left + insets.right,
+            height: size.height + insets.top + insets.bottom
+        )
     }
 }
 

@@ -29,6 +29,12 @@ final class PersistenceController {
             container.persistentStoreDescriptions = [description]
         }
 
+        // Ensure model changes like added attributes can migrate without a custom mapping model.
+        container.persistentStoreDescriptions.forEach { description in
+            description.shouldMigrateStoreAutomatically = true
+            description.shouldInferMappingModelAutomatically = true
+        }
+
         container.loadPersistentStores { _, error in
             if let error {
                 assertionFailure("Failed to load Core Data store: \(error)")

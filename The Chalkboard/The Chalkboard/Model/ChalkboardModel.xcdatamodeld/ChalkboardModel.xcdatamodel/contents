@@ -4,6 +4,7 @@
         <attribute name="date" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="NO" attributeType="String"/>
         <attribute name="isCompleted" optional="NO" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="prioritySeverityRaw" optional="NO" attributeType="Integer 16" defaultValueString="-1" usesScalarValueType="YES"/>
         <attribute name="sortOrder" optional="NO" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="text" optional="NO" attributeType="String"/>
     </entity>
