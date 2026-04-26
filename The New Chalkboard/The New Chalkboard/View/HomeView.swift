@@ -26,6 +26,7 @@ struct HomeView: View {
                             .padding(.top, 24)
                         
                     case .loaded:
+                        // Render pre-packed rows so tags wrap cleanly without manual geometry in the view.
                         VStack(alignment: .leading, spacing: 4) {
                             ForEach(viewModel.rows, id:\.self) { rows in
                                 HStack(spacing: 6) {
@@ -63,6 +64,7 @@ struct TagTextEditor: View {
         .font(.title2)
         .foregroundColor(.appTextPrimary)
         .onSubmit {
+            // Clear after submission so subsequent tags don’t start with the previous text.
             viewModel.tagInputText = ""
         }
         .padding()

@@ -6,6 +6,9 @@
 //
 import UIKit
 
+/// Value-type “domain model” used by the UI.
+///
+/// The persistence layer is responsible for mapping to/from Core Data entities.
 struct ChalkboardItem: Equatable {
     var id: UUID = UUID()
     var text: String

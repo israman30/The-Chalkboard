@@ -94,6 +94,7 @@ private extension ChalkboardItemStore {
     func fetchEntity(id: UUID, in context: NSManagedObjectContext) throws -> CDChalkboardItem {
         let request = CDChalkboardItem.fetchRequest()
         request.fetchLimit = 1
+        // Store UUIDs as strings to keep the Core Data model/tooling simple across versions.
         request.predicate = NSPredicate(format: "id == %@", id.uuidString)
 
         guard let entity = try context.fetch(request).first else {
@@ -107,6 +108,7 @@ private extension ChalkboardItemStore {
     }
 
     func makeSortOrderNow() -> Int64 {
+        // Milliseconds since epoch gives a stable “insertion order” that’s easy to sort by.
         Int64((Date().timeIntervalSince1970 * 1000.0).rounded())
     }
 }

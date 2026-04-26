@@ -99,6 +99,7 @@ final class EditItemSheetViewController: UIViewController {
     }
 
     private func updateDoneState() {
+        // Keep the “Save” action disabled when the title would be effectively empty.
         let trimmed = (textField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         doneButton.isEnabled = !trimmed.isEmpty
         doneButton.alpha = doneButton.isEnabled ? 1.0 : 0.5
@@ -112,6 +113,7 @@ final class EditItemSheetViewController: UIViewController {
         let trimmed = (textField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let picked = datePicker.date
+        // Fire the save callback after the sheet is dismissed to keep transitions clean.
         dismiss(animated: true) { [onSave] in
             onSave(trimmed, picked)
         }

@@ -12,6 +12,7 @@ struct The_New_ChalkboardApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                // Global accent used by controls + SF Symbol rendering across the app.
                 .tint(.appAccent)
         }
     }

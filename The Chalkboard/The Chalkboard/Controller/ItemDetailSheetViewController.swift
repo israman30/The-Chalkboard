@@ -24,6 +24,10 @@ final class ItemDetailSheetViewController: UIViewController {
     var onUpdate: ((String, Date) -> Void)?
     private let centeredCardTransition = CenteredCardTransitioningDelegate()
 
+    // Draft state decouples editing from persistence:
+    // - the user can freely edit/clear/change dates
+    // - nothing is committed until “Save changes”
+    // This also keeps “Cancel/Close” semantics intuitive.
     private var draftText: String
     private var draftDate: Date
 
@@ -106,11 +110,13 @@ final class ItemDetailSheetViewController: UIViewController {
     }
 
     @objc private func didTapSave() {
+        // Treat whitespace-only edits as empty so we don’t persist “invisible” titles.
         let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
         item.text = trimmed
         item.date = draftDate
+        // “Draft becomes canonical” for this screen once saved.
         draftText = trimmed
         applyDraftTitleToLabel()
 
@@ -133,6 +139,7 @@ final class ItemDetailSheetViewController: UIViewController {
         }
 
         if isShowingDatePicker {
+            // When expanding the inline picker, ensure it’s actually visible within the scroll view.
             let rectInScroll = datePicker.convert(datePicker.bounds, to: scrollView)
             scrollView.scrollRectToVisible(rectInScroll.insetBy(dx: 0, dy: -20), animated: true)
         }
@@ -145,6 +152,7 @@ final class ItemDetailSheetViewController: UIViewController {
     }
 
     @objc private func didTapBackground() {
+        // Background taps dismiss the keyboard without interfering with controls inside the card.
         view.endEditing(true)
     }
 
@@ -543,6 +551,7 @@ private extension ItemDetailSheetViewController {
         let hasText = !trimmed.isEmpty
 
         let hasTextChange = trimmed != item.text
+        // Only compare at day granularity so time components don’t accidentally enable “Save”.
         let hasDateChange = !Calendar.current.isDate(draftDate, inSameDayAs: item.date)
         let canSave = hasText && (hasTextChange || hasDateChange)
 

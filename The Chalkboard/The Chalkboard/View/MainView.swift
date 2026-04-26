@@ -79,6 +79,8 @@ extension MainController {
         view.addSubview(tableView)
         view.addSubview(inputBarStackView)
         
+        // The input bar is collapsible: we animate this single height constraint between 0 and a
+        // measured height, which keeps the rest of the layout stable.
         inputHeightConstrain = inputBarStackView.heightAnchor.constraint(equalToConstant: 0.0)
         inputBarStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor).isActive = true
         inputBarStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10).isActive = true

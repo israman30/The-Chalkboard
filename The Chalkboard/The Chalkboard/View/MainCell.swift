@@ -34,6 +34,7 @@ final class MainCell: UITableViewCell, CellProtocol {
         view.layer.shadowOpacity = 0.08
         view.layer.shadowRadius = 10
         view.layer.shadowOffset = CGSize(width: 0, height: 6)
+        // Shadows are expensive during fast table scrolling; rasterize this layer to reduce cost.
         view.layer.shouldRasterize = true
         view.layer.rasterizationScale = UIScreen.main.scale
         return view
@@ -94,6 +95,7 @@ final class MainCell: UITableViewCell, CellProtocol {
     }()
     
     func bind(_ item: ChalkboardItem) {
+        // Styling is data-driven so completed items can be visually distinguished (and read via VO).
         let titleAttributes: [NSAttributedString.Key: Any] = {
             if item.isCompleted {
                 return [
@@ -156,6 +158,7 @@ final class MainCell: UITableViewCell, CellProtocol {
         detailButton.addTarget(self, action: #selector(didTapDetail), for: .touchUpInside)
         
         titleLabel.isUserInteractionEnabled = true
+        // Treat the title as the primary action (toggle completed) to keep tapping ergonomic.
         titleLabel.accessibilityTraits.insert(.button)
         titleLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapTitle)))
         
@@ -184,6 +187,7 @@ final class MainCell: UITableViewCell, CellProtocol {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        // Provide a concrete shadow path for better performance than dynamic shadow rendering.
         containerView.layer.shadowPath = UIBezierPath(
             roundedRect: containerView.bounds,
             cornerRadius: containerView.layer.cornerRadius

@@ -99,14 +99,14 @@ class MainController: UIViewController {
         inputTextView.delegate = self
         setMainUI()
         configureAddButton()
-        // READ: Load persisted items from Core Data.
+        // Initial sync from disk so the table is always driven by persisted data.
         loadItems()
         applyViewState()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // READ: Refresh from disk in case another screen changed items.
+        // Refresh from disk in case a presented sheet updated an item.
         loadItems()
     }
 
@@ -115,6 +115,7 @@ class MainController: UIViewController {
             itemViewModel.items = try itemStore.fetchAll()
             tableView.reloadData()
         } catch {
+            // In debug builds, make fetch failures loud—this screen can’t function without its store.
             assertionFailure("Failed to fetch items: \(error)")
         }
     }
@@ -151,6 +152,7 @@ class MainController: UIViewController {
     
     @objc func add() {
         guard itemViewModel.isOpen else { return }
+        // Prevent stacking sheets/alerts if the user taps “Add” repeatedly.
         guard presentedViewController == nil else { return }
 
         let rawText = inputTextView.text ?? ""
@@ -160,6 +162,7 @@ class MainController: UIViewController {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         view.endEditing(true)
 
+        // “Date added” is a user-controlled attribute, so we collect it up-front (before persisting).
         presentDatePicker(title: "Date added", initialDate: Date()) { [weak self] selectedDate in
             guard let self else { return }
 
@@ -167,7 +170,8 @@ class MainController: UIViewController {
             self.input()
 
             do {
-                // CREATE: Persist the new item, then append to the in-memory list driving the table view.
+                // Persist first, then update the in-memory list that drives the table view.
+                // This keeps the UI consistent with the store if persistence fails.
                 let newItem = try self.itemStore.create(text: inputText, date: selectedDate, isCompleted: false)
                 let newIndex = self.itemViewModel.items.count
                 self.itemViewModel.items.append(newItem)
@@ -178,6 +182,7 @@ class MainController: UIViewController {
                     self.tableView.performBatchUpdates {
                         self.tableView.insertRows(at: [indexPath], with: .automatic)
                     } completion: { _ in
+                        // Scroll so the new item is visible even when the list is long.
                         self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
                         UINotificationFeedbackGenerator().notificationOccurred(.success)
                     }
@@ -352,7 +357,7 @@ extension MainController: InputHeightProtocol {
         view.layoutIfNeeded()
 
         let availableWidth = max(1, inputContainerView.bounds.width)
-        // left + right container padding, plus reserved space for the clear button.
+        // Left/right padding plus reserved trailing space for the clear button.
         let padding: CGFloat = 20 + clearInputButtonSize + clearInputButtonSpacing
         let textWidth = max(1, availableWidth - padding)
 
@@ -402,10 +407,12 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
                 let indexPath = tableView.indexPath(for: cell)
             else { return }
             
+            // Optimistic UI update: flip locally, persist, then re-render this row.
+            // If persistence fails, we assert in debug so we catch store issues early.
             self.itemViewModel.items[indexPath.row].isCompleted.toggle()
             let updated = self.itemViewModel.items[indexPath.row]
             do {
-                // UPDATE: Persist the completion toggle.
+                // Persist the completion state so it survives app relaunch.
                 _ = try self.itemStore.setCompleted(id: updated.id, isCompleted: updated.isCompleted)
             } catch {
                 assertionFailure("Failed to update completion: \(error)")
@@ -433,7 +440,7 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
 
             let item = self.itemViewModel.items[indexPath.row]
             do {
-                // DELETE: Remove from Core Data first, then update the table view.
+                // Delete from the store first; only mutate UI state once persistence succeeds.
                 try self.itemStore.delete(id: item.id)
                 self.itemViewModel.items.remove(at: indexPath.row)
                 applyViewState()
@@ -549,7 +556,7 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
             guard let self else { return }
             let existing = self.itemViewModel.items[indexPath.row]
             do {
-                // UPDATE: Persist changes from the edit sheet.
+                // Persist changes coming from the edit sheet, then refresh the visible row.
                 let updated = try self.itemStore.update(
                     id: existing.id,
                     text: updatedText,
@@ -582,7 +589,7 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
                 self.itemViewModel.items[indexPath.row].isCompleted = isCompleted
                 let updated = self.itemViewModel.items[indexPath.row]
                 do {
-                    // UPDATE: Persist completion toggle coming from the detail sheet.
+                    // Persist completion state changes coming from the detail sheet.
                     _ = try self.itemStore.setCompleted(id: updated.id, isCompleted: updated.isCompleted)
                 } catch {
                     assertionFailure("Failed to update completion: \(error)")
@@ -594,7 +601,7 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
 
                 let existing = self.itemViewModel.items[indexPath.row]
                 do {
-                    // UPDATE: Persist changes coming from the detail sheet.
+                    // Persist title/date edits coming from the detail sheet.
                     let updated = try self.itemStore.update(
                         id: existing.id,
                         text: updatedText,

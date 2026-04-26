@@ -18,26 +18,6 @@ struct TagView: View {
                 .customTag {
                     viewModel.removeTag(by: row.id)
                 }
-            /// `Saving this commented code for reference`
-//                .font(.system(size: 16))
-//                .fontWeight(.light)
-//                .padding(.leading, 14)
-//                .padding(.trailing, 30)
-//                .padding(.vertical, 8)
-//                .background(
-//                    ZStack(alignment: .trailing) {
-//                        Capsule()
-//                            .fill(.gray.opacity(0.3))
-//                        Button {
-//                            viewModel.removeTag(by: row.id)
-//                        } label: {
-//                            Image(systemName: "xmark")
-//                                .font(.system(size: 18))
-//                                .padding(.horizontal, 8)
-//                                .foregroundColor(.red)
-//                        }
-//                    }
-//                )
             
         }
     }
@@ -54,6 +34,7 @@ struct CustomTag: ViewModifier {
             .font(.system(size: 16))
             .fontWeight(.light)
             .padding(.leading, 14)
+            // Extra trailing space reserves room for the close (“x”) button.
             .padding(.trailing, 30)
             .padding(.vertical, 8)
             .background(

@@ -10,9 +10,8 @@ import UIKit
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        // Apply global appearance early so every navigation stack inherits the same palette.
         AppTheme.applySageAndSlate()
         return true
     }

@@ -1,0 +1,179 @@
+{
+  "" : {
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/The Chalkboard-primary.dia",
+    "emit-module-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/The Chalkboard-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/The Chalkboard-primary-emit-module.dia",
+    "pch" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/The Chalkboard-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/The Chalkboard-primary.swiftdeps"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/AppDelegate.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/AppDelegate.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/AppDelegate.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/AppDelegate.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/AppDelegate.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/AppDelegate.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/AppDelegate.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/AppDelegate.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/AppDelegate~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/Controller/CenteredCardTransition.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CenteredCardTransition.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CenteredCardTransition.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CenteredCardTransition.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CenteredCardTransition.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CenteredCardTransition.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CenteredCardTransition.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CenteredCardTransition.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CenteredCardTransition~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/Controller/DatePickerSheetViewController.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/DatePickerSheetViewController.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/DatePickerSheetViewController.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/DatePickerSheetViewController.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/DatePickerSheetViewController.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/DatePickerSheetViewController.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/DatePickerSheetViewController.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/DatePickerSheetViewController.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/DatePickerSheetViewController~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/Controller/EditItemSheetViewController.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/EditItemSheetViewController.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/EditItemSheetViewController.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/EditItemSheetViewController.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/EditItemSheetViewController.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/EditItemSheetViewController.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/EditItemSheetViewController.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/EditItemSheetViewController.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/EditItemSheetViewController~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/Controller/ItemDetailSheetViewController.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemDetailSheetViewController.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemDetailSheetViewController.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemDetailSheetViewController.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemDetailSheetViewController.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemDetailSheetViewController.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemDetailSheetViewController.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemDetailSheetViewController.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemDetailSheetViewController~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/Controller/MainController.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainController.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainController.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainController.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainController.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainController.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainController.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainController.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainController~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/Model/ChalkboardItem.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItem.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItem.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItem.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItem.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItem.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItem.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItem.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItem~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/Persistence/CDChalkboardItem.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CDChalkboardItem.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CDChalkboardItem.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CDChalkboardItem.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CDChalkboardItem.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CDChalkboardItem.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CDChalkboardItem.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CDChalkboardItem.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/CDChalkboardItem~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/Persistence/ChalkboardItemStore.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItemStore.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItemStore.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItemStore.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItemStore.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItemStore.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItemStore.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItemStore.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ChalkboardItemStore~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/Persistence/PersistenceController.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/PersistenceController.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/PersistenceController.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/PersistenceController.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/PersistenceController.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/PersistenceController.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/PersistenceController.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/PersistenceController.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/PersistenceController~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/Previews/UIKitPreviews.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/UIKitPreviews.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/UIKitPreviews.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/UIKitPreviews.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/UIKitPreviews.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/UIKitPreviews.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/UIKitPreviews.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/UIKitPreviews.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/UIKitPreviews~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/SceneDelegate.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/SceneDelegate.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/SceneDelegate.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/SceneDelegate.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/SceneDelegate.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/SceneDelegate.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/SceneDelegate.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/SceneDelegate.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/SceneDelegate~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/Utils/Utils.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/Utils.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/Utils.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/Utils.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/Utils.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/Utils.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/Utils.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/Utils.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/Utils~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/View/MainCell.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainCell.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainCell.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainCell.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainCell.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainCell.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainCell.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainCell.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainCell~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/View/MainView.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainView.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainView.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainView.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainView.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainView.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainView.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainView.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/MainView~partial.swiftmodule"
+  },
+  "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/The Chalkboard/The Chalkboard/ViewModel/ItemViewModel.swift" : {
+    "const-values" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemViewModel.swiftconstvalues",
+    "dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemViewModel.d",
+    "diagnostics" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemViewModel.dia",
+    "index-unit-output-path" : "/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemViewModel.o",
+    "llvm-bc" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemViewModel.bc",
+    "object" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemViewModel.o",
+    "swift-dependencies" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemViewModel.swiftdeps",
+    "swiftmodule" : "/Users/israelmanzo/Documents/GitHub/The-Chalkboard/.derivedDataSandboxChalkboard/Build/Intermediates.noindex/The Chalkboard.build/Debug-iphoneos/The Chalkboard.build/Objects-normal/arm64/ItemViewModel~partial.swiftmodule"
+  }
+}

@@ -9,10 +9,15 @@ import SwiftUI
 import UIKit
 
 enum ViewState<Value> {
+    /// No work has started yet.
     case idle
+    /// A request is in flight.
     case loading
+    /// The request succeeded but there’s nothing to render.
     case empty
+    /// The request succeeded with data.
     case loaded(Value)
+    /// A user-facing error string.
     case error(String)
 }
 
@@ -29,6 +34,8 @@ extension UIScreen {
 
 extension String {
     func getSize() -> CGFloat {
+        // Simple width estimation used for “tag row packing”.
+        // This doesn’t account for every typographic nuance, but it’s fast and good enough for UI layout.
         let font = UIFont.systemFont(ofSize: 16)
         let attributes = [NSAttributedString.Key.font: font]
         let size = (self as NSString).size(withAttributes: attributes)
@@ -61,6 +68,7 @@ extension Color {
     static let sageSlateOffWhite = Color(hex: 0xF2F7F5)
 
     // App semantic colors (dynamic for dark mode).
+    // These are intentionally defined in one place so views can use semantic names instead of raw colors.
     static let appBackground = Color(UIColor { trait in
         trait.userInterfaceStyle == .dark ? .systemBackground : UIColor(hex: 0xF2F7F5)
     })

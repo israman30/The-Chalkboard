@@ -80,6 +80,7 @@ final class DatePickerSheetViewController: UIViewController {
 
     @objc private func didTapDone() {
         let picked = datePicker.date
+        // Invoke the callback after dismissal to avoid presenting/animating over an active sheet.
         dismiss(animated: true) { [onPick] in
             onPick(picked)
         }
