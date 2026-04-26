@@ -7,12 +7,7 @@ final class CenteredCardTransitioningDelegate: NSObject, UIViewControllerTransit
     private let horizontalInset: CGFloat
     private let verticalInset: CGFloat
 
-    init(
-        cornerRadius: CGFloat = 18,
-        maxWidth: CGFloat = 460,
-        horizontalInset: CGFloat = 16,
-        verticalInset: CGFloat = 24
-    ) {
+    init(cornerRadius: CGFloat = 18, maxWidth: CGFloat = 460, horizontalInset: CGFloat = 16, verticalInset: CGFloat = 24) {
         self.cornerRadius = cornerRadius
         self.maxWidth = maxWidth
         self.horizontalInset = horizontalInset
