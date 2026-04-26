@@ -14,6 +14,7 @@ struct TagView: View {
     var body: some View {
         VStack {
             Text(row.name)
+                .foregroundColor(.appTextPrimary)
                 .customTag {
                     viewModel.removeTag(by: row.id)
                 }
@@ -58,7 +59,10 @@ struct CustomTag: ViewModifier {
             .background(
                 ZStack(alignment: .trailing) {
                     Capsule()
-                        .fill(.gray.opacity(0.3))
+                        .fill(Color.appElevatedSurface)
+                        .overlay(
+                            Capsule().stroke(Color.appBorder, lineWidth: 1)
+                        )
                     Button {
                         action()
                     } label: {

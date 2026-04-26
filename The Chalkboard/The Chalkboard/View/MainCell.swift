@@ -22,13 +22,13 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
+        view.backgroundColor = .appSurface
         view.layer.cornerRadius = 14
         if #available(iOS 13.0, *) {
             view.layer.cornerCurve = .continuous
         }
         view.layer.borderWidth = 1 / UIScreen.main.scale
-        view.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        view.layer.borderColor = UIColor.appBorder.cgColor
         view.layer.masksToBounds = false
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOpacity = 0.08
@@ -45,7 +45,7 @@ final class MainCell: UITableViewCell, CellProtocol {
         let baseFont = UIFont(name: "GillSans-Italic", size: 22) ?? UIFont.preferredFont(forTextStyle: .headline)
         label.font = UIFontMetrics(forTextStyle: .headline).scaledFont(for: baseFont)
         label.adjustsFontForContentSizeCategory = true
-        label.textColor = .label
+        label.textColor = .appTextPrimary
         return label
     }()
     
@@ -54,7 +54,7 @@ final class MainCell: UITableViewCell, CellProtocol {
         var configuration = UIButton.Configuration.plain()
         configuration.image = UIImage(systemName: "info.circle")
         configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-        configuration.baseForegroundColor = .secondaryLabel
+        configuration.baseForegroundColor = .appTextSecondary
         configuration.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = configuration
         button.accessibilityLabel = "Show item details"
@@ -63,7 +63,7 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.textColor = .secondaryLabel
+        label.textColor = .appTextSecondary
         label.font = .preferredFont(forTextStyle: .subheadline)
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 1
@@ -98,14 +98,14 @@ final class MainCell: UITableViewCell, CellProtocol {
             if item.isCompleted {
                 return [
                     .font: titleLabel.font as Any,
-                    .foregroundColor: UIColor.secondaryLabel,
+                    .foregroundColor: UIColor.appTextSecondary,
                     .strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                    .strikethroughColor: UIColor.secondaryLabel
+                    .strikethroughColor: UIColor.appTextSecondary
                 ]
             } else {
                 return [
                     .font: titleLabel.font as Any,
-                    .foregroundColor: UIColor.label
+                    .foregroundColor: UIColor.appTextPrimary
                 ]
             }
         }()
@@ -202,8 +202,8 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     private func updateHighlight(highlighted: Bool, animated: Bool) {
         let updates = {
-            self.containerView.backgroundColor = highlighted ? .tertiarySystemBackground : .secondarySystemBackground
-            self.containerView.layer.borderColor = UIColor.separator.withAlphaComponent(highlighted ? 0.45 : 0.25).cgColor
+            self.containerView.backgroundColor = highlighted ? .appElevatedSurface : .appSurface
+            self.containerView.layer.borderColor = UIColor.appBorder.withAlphaComponent(highlighted ? 0.55 : 1.0).cgColor
         }
         
         if animated {
@@ -241,7 +241,7 @@ private struct MainCellTablePreview: UIViewRepresentable {
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 80
         tableView.separatorStyle = .none
-        tableView.backgroundColor = .systemBackground
+        tableView.backgroundColor = .appBackground
         tableView.isScrollEnabled = false
         return tableView
     }

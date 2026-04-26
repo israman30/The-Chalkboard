@@ -11,7 +11,7 @@ extension MainController {
     
     func setMainUI() {
         navigationController?.navigationBar.prefersLargeTitles = true
-        navigationItem.rightBarButtonItem?.tintColor = .label
+        navigationItem.rightBarButtonItem?.tintColor = .appAccent
         
         /// TableView
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -21,7 +21,7 @@ extension MainController {
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 70
         tableView.keyboardDismissMode = .onDrag
-        tableView.backgroundColor = .systemBackground
+        tableView.backgroundColor = .appBackground
         tableView.separatorStyle = .none
         tableView.alwaysBounceVertical = true
         tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 16, right: 0)

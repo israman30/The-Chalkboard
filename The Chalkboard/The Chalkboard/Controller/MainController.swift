@@ -21,18 +21,18 @@ class MainController: UIViewController {
     
     let inputContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
+        view.backgroundColor = .appSurface
         view.layer.cornerRadius = 12
         view.layer.cornerCurve = .continuous
         view.layer.borderWidth = 1 / UIScreen.main.scale
-        view.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        view.layer.borderColor = UIColor.appBorder.cgColor
         return view
     }()
 
     let inputTextView: UITextView = {
         let tv = AutoGrowingTextView()
         tv.backgroundColor = .clear
-        tv.textColor = .label
+        tv.textColor = .appTextPrimary
         tv.font = UIFont(name: "GillSans-Italic", size: UIFont.preferredFont(forTextStyle: .title3).pointSize)
         tv.adjustsFontForContentSizeCategory = true
         tv.textContainerInset = .zero
@@ -47,7 +47,7 @@ class MainController: UIViewController {
     let inputPlaceholderLabel: UILabel = {
         let label = UILabel()
         label.text = "Enter something.."
-        label.textColor = .secondaryLabel
+        label.textColor = .appTextSecondary
         label.font = UIFont(name: "GillSans-Italic", size: UIFont.preferredFont(forTextStyle: .title3).pointSize)
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 1
@@ -67,7 +67,7 @@ class MainController: UIViewController {
         let btn = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
         btn.setImage(UIImage(systemName: "xmark.circle.fill", withConfiguration: config), for: .normal)
-        btn.tintColor = .tertiaryLabel
+        btn.tintColor = .appTextSecondary
         btn.accessibilityLabel = "Clear text"
         btn.accessibilityHint = "Clears the entry text"
         btn.isHidden = true
@@ -92,6 +92,7 @@ class MainController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "The Chalkboard"
+        view.backgroundColor = .appBackground
         updateInputToggleButton()
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
         clearInputButton.addTarget(self, action: #selector(didTapClearInput), for: .touchUpInside)
@@ -284,24 +285,24 @@ private extension MainController {
                 let enabled = button.isEnabled && showTitle
                 config.title = showTitle ? "Add" : ""
                 if enabled, button.isHighlighted {
-                    config.baseBackgroundColor = UIColor.greenColor.withAlphaComponent(0.85)
+                    config.baseBackgroundColor = UIColor.appAccentPressed
                 } else {
-                    config.baseBackgroundColor = enabled ? .greenColor : .systemGray4
+                    config.baseBackgroundColor = enabled ? .appAccent : UIColor.appElevatedSurface
                 }
-                config.baseForegroundColor = enabled ? .white : .systemGray
+                config.baseForegroundColor = enabled ? .appOnAccent : UIColor.appTextSecondary
                 button.configuration = config
             }
         } else {
             addButton.titleLabel?.font = UIFont(name: "GillSans-Italic", size: 20)
             addButton.setTitle("Add", for: .normal)
-            addButton.setTitleColor(.systemGray, for: .normal)
+            addButton.setTitleColor(.appTextSecondary, for: .normal)
             addButton.setImage(UIImage(systemName: "plus"), for: .normal)
             addButton.imageView?.contentMode = .scaleAspectFit
-            addButton.tintColor = .systemGray
+            addButton.tintColor = .appTextSecondary
             addButton.semanticContentAttribute = .forceLeftToRight
             addButton.contentHorizontalAlignment = .center
             addButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 6, bottom: 0, right: -6)
-            addButton.backgroundColor = .systemGray4
+            addButton.backgroundColor = .appElevatedSurface
             addButton.layer.cornerRadius = 22
             addButton.contentEdgeInsets = UIEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
         }
@@ -318,9 +319,9 @@ private extension MainController {
                 self.addButton.setTitle(showTitle ? "Add" : "", for: .normal)
 
                 let enabled = self.addButton.isEnabled && showTitle
-                self.addButton.setTitleColor(enabled ? .white : .systemGray, for: .normal)
-                self.addButton.tintColor = enabled ? .white : .systemGray
-                self.addButton.backgroundColor = enabled ? .greenColor : .systemGray4
+                self.addButton.setTitleColor(enabled ? .appOnAccent : .appTextSecondary, for: .normal)
+                self.addButton.tintColor = enabled ? .appOnAccent : .appTextSecondary
+                self.addButton.backgroundColor = enabled ? .appAccent : .appElevatedSurface
                 self.addButton.alpha = enabled ? 1.0 : 0.85
             }
         }
@@ -503,13 +504,13 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
         let container = UIView()
         
         let imageView = UIImageView(image: UIImage(systemName: "square.and.pencil"))
-        imageView.tintColor = .secondaryLabel
+        imageView.tintColor = .appTextSecondary
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
         
         let label = UILabel()
         label.text = "No items yet.\nTap + to add your first one."
-        label.textColor = .secondaryLabel
+        label.textColor = .appTextSecondary
         label.font = .preferredFont(forTextStyle: .body)
         label.adjustsFontForContentSizeCategory = true
         label.textAlignment = .center

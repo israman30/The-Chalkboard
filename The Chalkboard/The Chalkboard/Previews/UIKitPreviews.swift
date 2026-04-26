@@ -29,7 +29,7 @@ struct MainCell_Previews: PreviewProvider {
     static var previews: some View {
         UIViewPreview {
             let container = UIView()
-            container.backgroundColor = .systemBackground
+            container.backgroundColor = .appBackground
 
             let cell = MainCell(style: .default, reuseIdentifier: "preview")
             cell.bind(ChalkboardItem(

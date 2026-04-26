@@ -12,6 +12,7 @@ struct The_New_ChalkboardApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .tint(.appAccent)
         }
     }
 }

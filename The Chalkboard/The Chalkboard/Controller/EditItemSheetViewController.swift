@@ -39,10 +39,11 @@ final class EditItemSheetViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .appBackground
 
         titleLabel.text = titleText
         titleLabel.font = .preferredFont(forTextStyle: .headline)
+        titleLabel.textColor = .appTextPrimary
         titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 2
 
@@ -50,6 +51,8 @@ final class EditItemSheetViewController: UIViewController {
         textField.placeholder = "Title"
         textField.borderStyle = .roundedRect
         textField.font = .preferredFont(forTextStyle: .body)
+        textField.textColor = .appTextPrimary
+        textField.tintColor = .appAccent
         textField.autocapitalizationType = .sentences
         textField.clearButtonMode = .always
         textField.addTarget(self, action: #selector(textDidChange), for: .editingChanged)
@@ -61,9 +64,11 @@ final class EditItemSheetViewController: UIViewController {
         datePicker.date = initialDate
 
         cancelButton.setTitle("Cancel", for: .normal)
+        cancelButton.tintColor = .appAccent
         cancelButton.addTarget(self, action: #selector(didTapCancel), for: .touchUpInside)
 
         doneButton.setTitle("Save", for: .normal)
+        doneButton.tintColor = .appAccent
         doneButton.titleLabel?.font = .preferredFont(forTextStyle: .headline)
         doneButton.addTarget(self, action: #selector(didTapSave), for: .touchUpInside)
 

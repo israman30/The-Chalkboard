@@ -83,7 +83,7 @@ final class ItemDetailSheetViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .appBackground
         setupUI()
         applyItemToUI(animated: false)
     }
@@ -207,14 +207,14 @@ private extension ItemDetailSheetViewController {
 
         headerIconView.translatesAutoresizingMaskIntoConstraints = false
         headerIconView.contentMode = .center
-        headerIconView.tintColor = .white
-        headerIconView.backgroundColor = .greenColor
+        headerIconView.tintColor = .appOnAccent
+        headerIconView.backgroundColor = .appAccent
         headerIconView.layer.cornerRadius = 14
         headerIconView.layer.cornerCurve = .continuous
 
         headerTitleLabel.font = .preferredFont(forTextStyle: .headline)
         headerTitleLabel.adjustsFontForContentSizeCategory = true
-        headerTitleLabel.textColor = .label
+        headerTitleLabel.textColor = .appTextPrimary
         headerTitleLabel.numberOfLines = 1
         headerTitleLabel.text = "Item details"
 
@@ -222,12 +222,12 @@ private extension ItemDetailSheetViewController {
             var closeConfig = UIButton.Configuration.plain()
             closeConfig.image = UIImage(systemName: "xmark.circle.fill")
             closeConfig.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
-            closeConfig.baseForegroundColor = .secondaryLabel
+            closeConfig.baseForegroundColor = .appTextSecondary
             closeConfig.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 6)
             closeButton.configuration = closeConfig
         } else {
             closeButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-            closeButton.tintColor = .secondaryLabel
+            closeButton.tintColor = .appTextSecondary
             closeButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 6, bottom: 6, right: 6)
         }
         closeButton.accessibilityLabel = "Close"
@@ -256,11 +256,11 @@ private extension ItemDetailSheetViewController {
         itemTitleLabel.accessibilityLabel = "Item title"
         itemTitleLabel.accessibilityHint = "Double tap to edit the title"
         itemTitleLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapItemCard)))
-        itemTitleLabel.backgroundColor = .secondarySystemBackground
+        itemTitleLabel.backgroundColor = .appSurface
         itemTitleLabel.layer.cornerRadius = 16
         itemTitleLabel.layer.cornerCurve = .continuous
         itemTitleLabel.layer.borderWidth = 1 / UIScreen.main.scale
-        itemTitleLabel.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        itemTitleLabel.layer.borderColor = UIColor.appBorder.cgColor
         itemTitleLabel.layer.masksToBounds = true
         itemTitleLabel.contentInsets = UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14)
 
@@ -273,12 +273,12 @@ private extension ItemDetailSheetViewController {
         itemTitleEditor.setContentCompressionResistancePriority(.required, for: .vertical)
         itemTitleEditor.font = .preferredFont(forTextStyle: .title2)
         itemTitleEditor.adjustsFontForContentSizeCategory = true
-        itemTitleEditor.textColor = .label
-        itemTitleEditor.backgroundColor = .secondarySystemBackground
+        itemTitleEditor.textColor = .appTextPrimary
+        itemTitleEditor.backgroundColor = .appSurface
         itemTitleEditor.layer.cornerRadius = 16
         itemTitleEditor.layer.cornerCurve = .continuous
         itemTitleEditor.layer.borderWidth = 1 / UIScreen.main.scale
-        itemTitleEditor.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        itemTitleEditor.layer.borderColor = UIColor.appBorder.cgColor
         itemTitleEditor.layer.masksToBounds = true
         itemTitleEditor.isScrollEnabled = false
         // Extra trailing inset leaves room for the clear ("x") button.
@@ -292,7 +292,7 @@ private extension ItemDetailSheetViewController {
 
         clearTitleButton.translatesAutoresizingMaskIntoConstraints = false
         clearTitleButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-        clearTitleButton.tintColor = .tertiaryLabel
+        clearTitleButton.tintColor = .appTextSecondary
         clearTitleButton.accessibilityLabel = "Clear text"
         clearTitleButton.accessibilityHint = "Clears the item title text"
         clearTitleButton.addTarget(self, action: #selector(didTapClearTitle), for: .touchUpInside)
@@ -338,20 +338,20 @@ private extension ItemDetailSheetViewController {
         if #available(iOS 15.0, *) {
             var saveConfig = UIButton.Configuration.tinted()
             saveConfig.cornerStyle = .large
-            saveConfig.baseForegroundColor = .systemBlue
-            saveConfig.baseBackgroundColor = UIColor.systemBlue.withAlphaComponent(0.12)
+            saveConfig.baseForegroundColor = .appAccent
+            saveConfig.baseBackgroundColor = UIColor.appAccent.withAlphaComponent(0.14)
             saveConfig.image = UIImage(systemName: "checkmark.circle")
             saveConfig.imagePadding = 8
             saveConfig.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)
             saveButton.configuration = saveConfig
         } else {
             saveButton.setImage(UIImage(systemName: "checkmark.circle"), for: .normal)
-            saveButton.tintColor = .systemBlue
-            saveButton.setTitleColor(.systemBlue, for: .normal)
+            saveButton.tintColor = .appAccent
+            saveButton.setTitleColor(.appAccent, for: .normal)
             saveButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 14, bottom: 12, right: 14)
             saveButton.layer.cornerRadius = 14
             saveButton.layer.borderWidth = 1 / UIScreen.main.scale
-            saveButton.layer.borderColor = UIColor.systemBlue.withAlphaComponent(0.25).cgColor
+            saveButton.layer.borderColor = UIColor.appBorder.cgColor
             saveButton.layer.cornerCurve = .continuous
         }
         saveButton.setTitle("Save changes", for: .normal)
@@ -362,14 +362,14 @@ private extension ItemDetailSheetViewController {
         if #available(iOS 15.0, *) {
             var toggleConfig = UIButton.Configuration.filled()
             toggleConfig.cornerStyle = .large
-            toggleConfig.baseBackgroundColor = .greenColor
-            toggleConfig.baseForegroundColor = .white
+            toggleConfig.baseBackgroundColor = .appAccent
+            toggleConfig.baseForegroundColor = .appOnAccent
             toggleConfig.imagePadding = 8
             toggleConfig.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)
             toggleCompletedButton.configuration = toggleConfig
         } else {
-            toggleCompletedButton.backgroundColor = .greenColor
-            toggleCompletedButton.setTitleColor(.white, for: .normal)
+            toggleCompletedButton.backgroundColor = .appAccent
+            toggleCompletedButton.setTitleColor(.appOnAccent, for: .normal)
             toggleCompletedButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 14, bottom: 12, right: 14)
             toggleCompletedButton.layer.cornerRadius = 14
             toggleCompletedButton.layer.cornerCurve = .continuous
@@ -387,8 +387,8 @@ private extension ItemDetailSheetViewController {
         if #available(iOS 15.0, *) {
             var copyConfig = UIButton.Configuration.tinted()
             copyConfig.cornerStyle = .large
-            copyConfig.baseForegroundColor = .secondaryLabel
-            copyConfig.baseBackgroundColor = .tertiarySystemBackground
+            copyConfig.baseForegroundColor = .appTextSecondary
+            copyConfig.baseBackgroundColor = .appElevatedSurface
             copyConfig.image = UIImage(systemName: "doc.on.doc")
             copyConfig.imagePadding = 8
             copyConfig.title = "Copy"
@@ -396,10 +396,10 @@ private extension ItemDetailSheetViewController {
             copyButton.configuration = copyConfig
         } else {
             copyButton.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
-            copyButton.tintColor = .secondaryLabel
+            copyButton.tintColor = .appTextSecondary
             copyButton.setTitle("Copy", for: .normal)
-            copyButton.setTitleColor(.secondaryLabel, for: .normal)
-            copyButton.backgroundColor = .tertiarySystemBackground
+            copyButton.setTitleColor(.appTextSecondary, for: .normal)
+            copyButton.backgroundColor = .appElevatedSurface
             copyButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
             copyButton.layer.cornerRadius = 14
             copyButton.layer.cornerCurve = .continuous
@@ -411,8 +411,8 @@ private extension ItemDetailSheetViewController {
         if #available(iOS 15.0, *) {
             var shareConfig = UIButton.Configuration.tinted()
             shareConfig.cornerStyle = .large
-            shareConfig.baseForegroundColor = .secondaryLabel
-            shareConfig.baseBackgroundColor = .tertiarySystemBackground
+            shareConfig.baseForegroundColor = .appTextSecondary
+            shareConfig.baseBackgroundColor = .appElevatedSurface
             shareConfig.image = UIImage(systemName: "square.and.arrow.up")
             shareConfig.imagePadding = 8
             shareConfig.title = "Share"
@@ -420,10 +420,10 @@ private extension ItemDetailSheetViewController {
             shareButton.configuration = shareConfig
         } else {
             shareButton.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
-            shareButton.tintColor = .secondaryLabel
+            shareButton.tintColor = .appTextSecondary
             shareButton.setTitle("Share", for: .normal)
-            shareButton.setTitleColor(.secondaryLabel, for: .normal)
-            shareButton.backgroundColor = .tertiarySystemBackground
+            shareButton.setTitleColor(.appTextSecondary, for: .normal)
+            shareButton.backgroundColor = .appElevatedSurface
             shareButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
             shareButton.layer.cornerRadius = 14
             shareButton.layer.cornerCurve = .continuous
@@ -481,16 +481,16 @@ private extension ItemDetailSheetViewController {
             self.dateChip.configure(
                 text: "Added \(addedText)",
                 systemImageName: "calendar",
-                tintColor: .secondaryLabel,
-                backgroundColor: UIColor.tertiarySystemBackground
+                tintColor: .appTextSecondary,
+                backgroundColor: UIColor.appElevatedSurface
             )
 
             if self.item.isCompleted {
                 self.statusChip.configure(
                     text: "Completed",
                     systemImageName: "checkmark.circle.fill",
-                    tintColor: UIColor.greenColor,
-                    backgroundColor: UIColor.greenColor.withAlphaComponent(0.12)
+                    tintColor: UIColor.appAccent,
+                    backgroundColor: UIColor.appAccent.withAlphaComponent(0.16)
                 )
                 if #available(iOS 15.0, *) {
                     var toggleConfig = self.toggleCompletedButton.configuration ?? UIButton.Configuration.filled()
@@ -503,13 +503,13 @@ private extension ItemDetailSheetViewController {
                     self.toggleCompletedButton.tintColor = .white
                 }
                 self.headerIconView.image = UIImage(systemName: "checkmark.circle.fill")
-                self.headerIconView.backgroundColor = .greenColor
+                self.headerIconView.backgroundColor = .appAccent
             } else {
                 self.statusChip.configure(
                     text: "Active",
                     systemImageName: "circle.fill",
-                    tintColor: .secondaryLabel,
-                    backgroundColor: UIColor.tertiarySystemBackground
+                    tintColor: .appTextSecondary,
+                    backgroundColor: UIColor.appElevatedSurface
                 )
                 if #available(iOS 15.0, *) {
                     var toggleConfig = self.toggleCompletedButton.configuration ?? UIButton.Configuration.filled()
@@ -522,7 +522,7 @@ private extension ItemDetailSheetViewController {
                     self.toggleCompletedButton.tintColor = .white
                 }
                 self.headerIconView.image = UIImage(systemName: "doc.text")
-                self.headerIconView.backgroundColor = .greenColor
+                self.headerIconView.backgroundColor = .appAccent
             }
 
             let labelText = self.draftText.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -577,10 +577,10 @@ private extension ItemDetailSheetViewController {
         let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
             itemTitleLabel.text = "Title"
-            itemTitleLabel.textColor = .secondaryLabel
+            itemTitleLabel.textColor = .appTextSecondary
         } else {
             itemTitleLabel.text = trimmed
-            itemTitleLabel.textColor = .label
+            itemTitleLabel.textColor = .appTextPrimary
         }
         itemTitleLabel.accessibilityValue = trimmed
     }
@@ -646,7 +646,7 @@ private final class ChipView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
 
-        backgroundColor = .tertiarySystemBackground
+        backgroundColor = .appElevatedSurface
         layer.cornerRadius = 12
         layer.cornerCurve = .continuous
 
@@ -657,11 +657,11 @@ private final class ChipView: UIView {
 
         iconView.translatesAutoresizingMaskIntoConstraints = false
         iconView.contentMode = .scaleAspectFit
-        iconView.tintColor = .secondaryLabel
+        iconView.tintColor = .appTextSecondary
 
         label.font = .preferredFont(forTextStyle: .subheadline)
         label.adjustsFontForContentSizeCategory = true
-        label.textColor = .secondaryLabel
+        label.textColor = .appTextSecondary
         label.numberOfLines = 1
 
         addSubview(stack)
@@ -758,7 +758,7 @@ private final class ItemDetailPreviewHostViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .appBackground
 
         let dim = UIView()
         dim.translatesAutoresizingMaskIntoConstraints = false
@@ -783,7 +783,7 @@ private final class ItemDetailPreviewHostViewController: UIViewController {
 
         let cardContent = UIView()
         cardContent.translatesAutoresizingMaskIntoConstraints = false
-        cardContent.backgroundColor = .systemBackground
+        cardContent.backgroundColor = .appBackground
         cardContent.layer.cornerRadius = 18
         cardContent.layer.cornerCurve = .continuous
         cardContent.layer.masksToBounds = true

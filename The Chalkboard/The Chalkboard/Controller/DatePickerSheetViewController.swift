@@ -31,10 +31,11 @@ final class DatePickerSheetViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .appBackground
 
         titleLabel.text = titleText
         titleLabel.font = .preferredFont(forTextStyle: .headline)
+        titleLabel.textColor = .appTextPrimary
         titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 2
 
@@ -45,9 +46,11 @@ final class DatePickerSheetViewController: UIViewController {
         datePicker.date = initialDate
 
         cancelButton.setTitle("Cancel", for: .normal)
+        cancelButton.tintColor = .appAccent
         cancelButton.addTarget(self, action: #selector(didTapCancel), for: .touchUpInside)
 
         doneButton.setTitle("Done", for: .normal)
+        doneButton.tintColor = .appAccent
         doneButton.titleLabel?.font = .preferredFont(forTextStyle: .headline)
         doneButton.addTarget(self, action: #selector(didTapDone), for: .touchUpInside)
 

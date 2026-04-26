@@ -23,7 +23,77 @@ extension ViewState {
 }
 
 extension UIColor {
-    static var greenColor = UIColor(red: 77/255, green: 125/255, blue: 90/255, alpha: 1)
+    convenience init(hex: UInt32, alpha: CGFloat = 1) {
+        let r = CGFloat((hex >> 16) & 0xFF) / 255.0
+        let g = CGFloat((hex >> 8) & 0xFF) / 255.0
+        let b = CGFloat(hex & 0xFF) / 255.0
+        self.init(red: r, green: g, blue: b, alpha: alpha)
+    }
+
+    // Sage & Slate palette (light mode).
+    static let sageSlateDark = UIColor(hex: 0x3D5A5A)
+    static let sageSlate = UIColor(hex: 0x5C8A8A)
+    static let sage = UIColor(hex: 0xA8C5B5)
+    static let sageSlateOffWhite = UIColor(hex: 0xF2F7F5)
+
+    // App semantic colors (dynamic for dark mode).
+    static let appBackground = UIColor { trait in
+        trait.userInterfaceStyle == .dark ? .systemBackground : .sageSlateOffWhite
+    }
+
+    static let appSurface = UIColor { trait in
+        trait.userInterfaceStyle == .dark ? .secondarySystemBackground : .sageSlateOffWhite
+    }
+
+    static let appElevatedSurface = UIColor { trait in
+        trait.userInterfaceStyle == .dark ? .tertiarySystemBackground : UIColor.sage.withAlphaComponent(0.22)
+    }
+
+    static let appTextPrimary = UIColor { trait in
+        trait.userInterfaceStyle == .dark ? .label : .sageSlateDark
+    }
+
+    static let appTextSecondary = UIColor { trait in
+        trait.userInterfaceStyle == .dark ? .secondaryLabel : UIColor.sageSlate.withAlphaComponent(0.95)
+    }
+
+    static let appAccent = UIColor { trait in
+        trait.userInterfaceStyle == .dark ? .systemTeal : .sageSlate
+    }
+
+    static let appAccentPressed = UIColor { trait in
+        trait.userInterfaceStyle == .dark ? UIColor.systemTeal.withAlphaComponent(0.85) : .sageSlateDark
+    }
+
+    static let appOnAccent = UIColor { _ in
+        .white
+    }
+
+    static let appBorder = UIColor { trait in
+        trait.userInterfaceStyle == .dark ? .separator : UIColor.sageSlate.withAlphaComponent(0.25)
+    }
+}
+
+enum AppTheme {
+    static func applySageAndSlate() {
+        guard #available(iOS 13.0, *) else { return }
+
+        let nav = UINavigationBarAppearance()
+        nav.configureWithOpaqueBackground()
+        nav.backgroundColor = .appBackground
+        nav.titleTextAttributes = [
+            .foregroundColor: UIColor.appTextPrimary
+        ]
+        nav.largeTitleTextAttributes = [
+            .foregroundColor: UIColor.appTextPrimary
+        ]
+
+        let bar = UINavigationBar.appearance()
+        bar.standardAppearance = nav
+        bar.scrollEdgeAppearance = nav
+        bar.compactAppearance = nav
+        bar.tintColor = .appAccent
+    }
 }
 
 extension UITextField {
