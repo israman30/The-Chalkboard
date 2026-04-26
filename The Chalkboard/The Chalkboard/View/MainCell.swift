@@ -131,8 +131,8 @@ final class MainCell: UITableViewCell, CellProtocol {
 
         if let severity = item.prioritySeverity {
             priorityTagLabel.text = severity.title
-            priorityTagLabel.textColor = severity.tintColor
-            priorityTagLabel.backgroundColor = severity.tintColor.withAlphaComponent(0.16)
+            priorityTagLabel.textColor = severity.tagForegroundColor
+            priorityTagLabel.backgroundColor = severity.tagColor
             priorityTagLabel.accessibilityLabel = "Priority \(severity.title)"
         } else {
             priorityTagLabel.text = "None"

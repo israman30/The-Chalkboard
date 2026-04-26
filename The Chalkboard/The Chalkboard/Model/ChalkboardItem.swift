@@ -21,13 +21,15 @@ enum ChalkboardItemPrioritySeverity: Int16, CaseIterable, Equatable {
         }
     }
 
-    var tintColor: UIColor {
+    var tagColor: UIColor {
         switch self {
         case .low: UIColor.systemGreen
         case .medium: UIColor.systemYellow
         case .high: UIColor.systemRed
         }
     }
+
+    var tagForegroundColor: UIColor { .white }
 
     var systemImageName: String { "flag.fill" }
 }

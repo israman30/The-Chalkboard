@@ -537,8 +537,8 @@ private extension ItemDetailSheetViewController {
                 self.priorityChip.configure(
                     text: "Priority: \(severity.title)",
                     systemImageName: severity.systemImageName,
-                    tintColor: severity.tintColor,
-                    backgroundColor: severity.tintColor.withAlphaComponent(0.16)
+                    tintColor: severity.tagForegroundColor,
+                    backgroundColor: severity.tagColor
                 )
             } else {
                 self.priorityChip.configure(
