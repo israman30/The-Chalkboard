@@ -63,6 +63,18 @@ class MainController: UIViewController {
         return btn
     }()
 
+    let clearInputButton: UIButton = {
+        let btn = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+        btn.setImage(UIImage(systemName: "xmark.circle.fill", withConfiguration: config), for: .normal)
+        btn.tintColor = .tertiaryLabel
+        btn.accessibilityLabel = "Clear text"
+        btn.accessibilityHint = "Clears the entry text"
+        btn.isHidden = true
+        btn.alpha = 0
+        return btn
+    }()
+
     let inputBarStackView = UIStackView()
     
     var itemViewModel = ItemViewModel()
@@ -74,12 +86,15 @@ class MainController: UIViewController {
     var inputHeightConstrain: NSLayoutConstraint?
     private let inputMinHeight: CGFloat = 50
     private let inputMaxHeight: CGFloat = 150
+    let clearInputButtonSize: CGFloat = 24
+    let clearInputButtonSpacing: CGFloat = 8
 
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "The Chalkboard"
         updateInputToggleButton()
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
+        clearInputButton.addTarget(self, action: #selector(didTapClearInput), for: .touchUpInside)
         inputTextView.delegate = self
         setMainUI()
         configureAddButton()
@@ -118,6 +133,7 @@ class MainController: UIViewController {
             inputPlaceholderLabel.isHidden = true
             addButton.isEnabled = false
             updateAddButtonPresentation(animated: false)
+            updateClearInputButtonVisibility(animated: false)
             return
         }
 
@@ -127,6 +143,7 @@ class MainController: UIViewController {
         inputPlaceholderLabel.isHidden = !trimmed.isEmpty
         addButton.isEnabled = hasInput
         updateAddButtonPresentation(animated: true)
+        updateClearInputButtonVisibility(animated: true)
 
         updateInputHeight(animated: true)
     }
@@ -182,6 +199,7 @@ class MainController: UIViewController {
             // Prevent placeholder from flashing when the bar is collapsed to 0.
             inputPlaceholderLabel.isHidden = true
             addButton.isEnabled = false
+            updateClearInputButtonVisibility(animated: false)
         }
         updateInputToggleButton()
         animateLayout()
@@ -191,6 +209,38 @@ class MainController: UIViewController {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) { [weak self] in
                 self?.inputTextView.becomeFirstResponder()
             }
+        }
+    }
+
+    @objc private func didTapClearInput() {
+        inputTextView.text = ""
+        input()
+        if itemViewModel.isOpen {
+            inputTextView.becomeFirstResponder()
+        }
+    }
+
+    private func updateClearInputButtonVisibility(animated: Bool) {
+        let trimmed = (inputTextView.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let shouldShow = itemViewModel.isOpen && !trimmed.isEmpty
+
+        if shouldShow {
+            clearInputButton.isHidden = false
+        }
+
+        let updates = {
+            self.clearInputButton.alpha = shouldShow ? 1.0 : 0.0
+        }
+
+        let completion: (Bool) -> Void = { _ in
+            self.clearInputButton.isHidden = !shouldShow
+        }
+
+        if animated {
+            UIView.animate(withDuration: 0.12, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: updates, completion: completion)
+        } else {
+            updates()
+            completion(true)
         }
     }
     
@@ -301,7 +351,8 @@ extension MainController: InputHeightProtocol {
         view.layoutIfNeeded()
 
         let availableWidth = max(1, inputContainerView.bounds.width)
-        let padding: CGFloat = 20 // left + right inside the input container
+        // left + right container padding, plus reserved space for the clear button.
+        let padding: CGFloat = 20 + clearInputButtonSize + clearInputButtonSpacing
         let textWidth = max(1, availableWidth - padding)
 
         let fitting = inputTextView.sizeThatFits(CGSize(width: textWidth, height: .greatestFiniteMagnitude))

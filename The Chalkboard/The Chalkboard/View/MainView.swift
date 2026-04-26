@@ -30,19 +30,26 @@ extension MainController {
         inputContainerView.clipsToBounds = true
         inputTextView.translatesAutoresizingMaskIntoConstraints = false
         inputPlaceholderLabel.translatesAutoresizingMaskIntoConstraints = false
+        clearInputButton.translatesAutoresizingMaskIntoConstraints = false
 
         inputContainerView.addSubview(inputTextView)
         inputContainerView.addSubview(inputPlaceholderLabel)
+        inputContainerView.addSubview(clearInputButton)
 
         NSLayoutConstraint.activate([
             inputTextView.leadingAnchor.constraint(equalTo: inputContainerView.leadingAnchor, constant: 10),
-            inputTextView.trailingAnchor.constraint(equalTo: inputContainerView.trailingAnchor, constant: -10),
+            inputTextView.trailingAnchor.constraint(equalTo: clearInputButton.leadingAnchor, constant: -clearInputButtonSpacing),
             inputTextView.topAnchor.constraint(equalTo: inputContainerView.topAnchor, constant: 10),
             inputTextView.bottomAnchor.constraint(equalTo: inputContainerView.bottomAnchor, constant: -10),
 
             inputPlaceholderLabel.leadingAnchor.constraint(equalTo: inputTextView.leadingAnchor),
             inputPlaceholderLabel.trailingAnchor.constraint(lessThanOrEqualTo: inputTextView.trailingAnchor),
-            inputPlaceholderLabel.topAnchor.constraint(equalTo: inputTextView.topAnchor)
+            inputPlaceholderLabel.topAnchor.constraint(equalTo: inputTextView.topAnchor),
+
+            clearInputButton.trailingAnchor.constraint(equalTo: inputContainerView.trailingAnchor, constant: -10),
+            clearInputButton.topAnchor.constraint(equalTo: inputContainerView.topAnchor, constant: 10),
+            clearInputButton.widthAnchor.constraint(equalToConstant: clearInputButtonSize),
+            clearInputButton.heightAnchor.constraint(equalToConstant: clearInputButtonSize)
         ])
 
         inputBarStackView.arrangedSubviews.forEach { inputBarStackView.removeArrangedSubview($0); $0.removeFromSuperview() }

@@ -51,7 +51,7 @@ final class EditItemSheetViewController: UIViewController {
         textField.borderStyle = .roundedRect
         textField.font = .preferredFont(forTextStyle: .body)
         textField.autocapitalizationType = .sentences
-        textField.clearButtonMode = .whileEditing
+        textField.clearButtonMode = .always
         textField.addTarget(self, action: #selector(textDidChange), for: .editingChanged)
 
         datePicker.datePickerMode = .date

@@ -37,6 +37,7 @@ final class ItemDetailSheetViewController: UIViewController {
 
     private let itemTitleLabel = InsetLabel()
     private let itemTitleEditor = AutoGrowingTextView()
+    private let clearTitleButton = UIButton(type: .system)
     private var itemTitleMinHeightConstraint: NSLayoutConstraint?
     private var itemTitleEditorHeightConstraint: NSLayoutConstraint?
 
@@ -55,6 +56,7 @@ final class ItemDetailSheetViewController: UIViewController {
     private var backgroundTapGesture: UITapGestureRecognizer?
 
     private let itemTextMinHeight: CGFloat = 44
+    private let clearButtonSize: CGFloat = 24
 
     private static let dateFormatter: DateFormatter = {
         let df = DateFormatter()
@@ -164,6 +166,14 @@ final class ItemDetailSheetViewController: UIViewController {
         }
         present(activity, animated: true)
     }
+
+    @objc private func didTapClearTitle() {
+        draftText = ""
+        itemTitleEditor.text = ""
+        updateItemTitleEditorHeight(animated: false)
+        updateSaveState()
+        updateClearTitleButtonVisibility(animated: true)
+    }
 }
 
 private extension ItemDetailSheetViewController {
@@ -271,13 +281,24 @@ private extension ItemDetailSheetViewController {
         itemTitleEditor.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
         itemTitleEditor.layer.masksToBounds = true
         itemTitleEditor.isScrollEnabled = false
-        itemTitleEditor.textContainerInset = UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14)
+        // Extra trailing inset leaves room for the clear ("x") button.
+        itemTitleEditor.textContainerInset = UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14 + clearButtonSize + 10)
         itemTitleEditor.textContainer.lineFragmentPadding = 0
         itemTitleEditor.keyboardType = .default
         itemTitleEditor.autocapitalizationType = .sentences
         itemTitleEditor.accessibilityLabel = "Edit item title"
         itemTitleEditor.accessibilityHint = "Edit the item title"
         itemTitleEditor.isHidden = true
+
+        clearTitleButton.translatesAutoresizingMaskIntoConstraints = false
+        clearTitleButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
+        clearTitleButton.tintColor = .tertiaryLabel
+        clearTitleButton.accessibilityLabel = "Clear text"
+        clearTitleButton.accessibilityHint = "Clears the item title text"
+        clearTitleButton.addTarget(self, action: #selector(didTapClearTitle), for: .touchUpInside)
+        clearTitleButton.isHidden = true
+        clearTitleButton.alpha = 0
+        itemTitleEditor.addSubview(clearTitleButton)
 
         let minHeight = itemTitleEditor.heightAnchor.constraint(greaterThanOrEqualToConstant: itemTextMinHeight)
         minHeight.priority = .required
@@ -435,6 +456,13 @@ private extension ItemDetailSheetViewController {
             contentStack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor)
         ])
 
+        NSLayoutConstraint.activate([
+            clearTitleButton.widthAnchor.constraint(equalToConstant: clearButtonSize),
+            clearTitleButton.heightAnchor.constraint(equalToConstant: clearButtonSize),
+            clearTitleButton.trailingAnchor.constraint(equalTo: itemTitleEditor.trailingAnchor, constant: -(14)),
+            clearTitleButton.topAnchor.constraint(equalTo: itemTitleEditor.topAnchor, constant: 12)
+        ])
+
         headerIconView.image = UIImage(systemName: "doc.text")
 
         updateSaveState()
@@ -444,6 +472,7 @@ private extension ItemDetailSheetViewController {
         itemTitleEditor.isScrollEnabled = false
         itemTitleEditor.text = draftText
         applyDraftTitleToLabel()
+        updateClearTitleButtonVisibility(animated: false)
     }
 
     func applyItemToUI(animated: Bool) {
@@ -531,6 +560,7 @@ private extension ItemDetailSheetViewController {
         itemTitleLabel.isHidden = true
         itemTitleEditor.isHidden = false
         updateItemTitleEditorHeight(animated: false)
+        updateClearTitleButtonVisibility(animated: false)
         itemTitleEditor.becomeFirstResponder()
     }
 
@@ -580,6 +610,30 @@ private extension ItemDetailSheetViewController {
             }
         } else {
             view.layoutIfNeeded()
+        }
+    }
+
+    func updateClearTitleButtonVisibility(animated: Bool) {
+        let trimmed = itemTitleEditor.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let shouldShow = !itemTitleEditor.isHidden && !trimmed.isEmpty
+
+        if shouldShow {
+            clearTitleButton.isHidden = false
+        }
+
+        let updates = {
+            self.clearTitleButton.alpha = shouldShow ? 1.0 : 0.0
+        }
+
+        let completion: (Bool) -> Void = { _ in
+            self.clearTitleButton.isHidden = !shouldShow
+        }
+
+        if animated {
+            UIView.animate(withDuration: 0.15, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: updates, completion: completion)
+        } else {
+            updates()
+            completion(true)
         }
     }
 }
@@ -647,6 +701,7 @@ extension ItemDetailSheetViewController: UITextViewDelegate {
         draftText = textView.text ?? ""
         updateItemTitleEditorHeight(animated: false)
         updateSaveState()
+        updateClearTitleButtonVisibility(animated: true)
     }
 
     func textViewDidEndEditing(_ textView: UITextView) {
