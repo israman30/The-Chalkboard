@@ -7,10 +7,25 @@
 
 import UIKit
 
+protocol ItemDetailSheetProtocol {
+    var item: ChalkboardItem { get set }
+}
+
+protocol ItemDetailSheetEventProtocol {
+    var onToggleCompleted: ((Bool) -> Void)? { get set }
+    var onUpdate: ((String, Date) -> Void)? { get set }
+}
+
+extension ItemDetailSheetViewController: ItemDetailSheetProtocol, ItemDetailSheetEventProtocol { }
+
 final class ItemDetailSheetViewController: UIViewController {
-    private var item: ChalkboardItem
-    private let onToggleCompleted: ((Bool) -> Void)?
-    private let onEdit: (() -> Void)?
+    var item: ChalkboardItem
+    var onToggleCompleted: ((Bool) -> Void)?
+    var onUpdate: ((String, Date) -> Void)?
+    private let centeredCardTransition = CenteredCardTransitioningDelegate()
+
+    private var draftText: String
+    private var draftDate: Date
 
     private let scrollView = UIScrollView()
     private let contentStack = UIStackView()
@@ -20,18 +35,26 @@ final class ItemDetailSheetViewController: UIViewController {
     private let headerTitleLabel = UILabel()
     private let closeButton = UIButton(type: .system)
 
-    private let itemCardView = UIView()
-    private let itemTextLabel = UILabel()
+    private let itemTitleLabel = InsetLabel()
+    private let itemTitleEditor = AutoGrowingTextView()
+    private var itemTitleMinHeightConstraint: NSLayoutConstraint?
+    private var itemTitleEditorHeightConstraint: NSLayoutConstraint?
 
     private let chipsRow = UIStackView()
     private let statusChip = ChipView()
     private let dateChip = ChipView()
+    private let datePicker = UIDatePicker()
 
     private let actionsRow = UIStackView()
+    private let saveButton = UIButton(type: .system)
     private let toggleCompletedButton = UIButton(type: .system)
-    private let editButton = UIButton(type: .system)
     private let copyButton = UIButton(type: .system)
     private let shareButton = UIButton(type: .system)
+
+    private var isShowingDatePicker = false
+    private var backgroundTapGesture: UITapGestureRecognizer?
+
+    private let itemTextMinHeight: CGFloat = 44
 
     private static let dateFormatter: DateFormatter = {
         let df = DateFormatter()
@@ -40,11 +63,16 @@ final class ItemDetailSheetViewController: UIViewController {
         return df
     }()
 
-    init(item: ChalkboardItem, onToggleCompleted: ((Bool) -> Void)? = nil, onEdit: (() -> Void)? = nil) {
+    init(item: ChalkboardItem, onToggleCompleted: ((Bool) -> Void)? = nil, onUpdate: ((String, Date) -> Void)? = nil) {
         self.item = item
         self.onToggleCompleted = onToggleCompleted
-        self.onEdit = onEdit
+        self.onUpdate = onUpdate
+        self.draftText = item.text
+        self.draftDate = item.date
         super.init(nibName: nil, bundle: nil)
+        modalPresentationStyle = .custom
+        transitioningDelegate = centeredCardTransition
+        preferredContentSize = CGSize(width: 460, height: 560)
     }
 
     required init?(coder: NSCoder) {
@@ -58,6 +86,12 @@ final class ItemDetailSheetViewController: UIViewController {
         applyItemToUI(animated: false)
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // Ensure layout updates keep the editor's intrinsic height accurate.
+        itemTitleEditor.invalidateIntrinsicContentSize()
+    }
+
     @objc private func didTapClose() {
         dismiss(animated: true)
     }
@@ -69,19 +103,61 @@ final class ItemDetailSheetViewController: UIViewController {
         applyItemToUI(animated: true)
     }
 
-    @objc private func didTapEdit() {
-        dismiss(animated: true) { [onEdit] in
-            onEdit?()
+    @objc private func didTapSave() {
+        let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        item.text = trimmed
+        item.date = draftDate
+        draftText = trimmed
+        applyDraftTitleToLabel()
+
+        view.endEditing(true)
+        onUpdate?(trimmed, draftDate)
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+        updateSaveState()
+        applyItemToUI(animated: true)
+    }
+
+    @objc private func didTapDateChip() {
+        isShowingDatePicker.toggle()
+        datePicker.isHidden = !isShowingDatePicker
+
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+        UIView.animate(withDuration: 0.2, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut]) {
+            self.view.layoutIfNeeded()
+        }
+
+        if isShowingDatePicker {
+            let rectInScroll = datePicker.convert(datePicker.bounds, to: scrollView)
+            scrollView.scrollRectToVisible(rectInScroll.insetBy(dx: 0, dy: -20), animated: true)
         }
     }
 
+    @objc private func dateDidChange() {
+        draftDate = datePicker.date
+        updateSaveState()
+        applyItemToUI(animated: false)
+    }
+
+    @objc private func didTapBackground() {
+        view.endEditing(true)
+    }
+
+    @objc private func didTapItemCard() {
+        beginEditingTitle()
+    }
+
     @objc private func didTapCopy() {
-        UIPasteboard.general.string = item.text
+        UIPasteboard.general.string = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
     @objc private func didTapShare() {
-        let activity = UIActivityViewController(activityItems: [item.text], applicationActivities: nil)
+        let text = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let activity = UIActivityViewController(activityItems: [text], applicationActivities: nil)
         if let popover = activity.popoverPresentationController {
             popover.sourceView = shareButton
             popover.sourceRect = shareButton.bounds
@@ -100,6 +176,14 @@ private extension ItemDetailSheetViewController {
 
         scrollView.alwaysBounceVertical = true
         scrollView.showsVerticalScrollIndicator = true
+        scrollView.keyboardDismissMode = .interactive
+        scrollView.delaysContentTouches = false
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(didTapBackground))
+        tap.cancelsTouchesInView = false
+        tap.delegate = self
+        view.addGestureRecognizer(tap)
+        backgroundTapGesture = tap
 
         contentStack.axis = .vertical
         contentStack.alignment = .fill
@@ -153,25 +237,52 @@ private extension ItemDetailSheetViewController {
             headerIconView.heightAnchor.constraint(equalToConstant: 28)
         ])
 
-        itemCardView.backgroundColor = .secondarySystemBackground
-        itemCardView.layer.cornerRadius = 16
-        itemCardView.layer.cornerCurve = .continuous
-        itemCardView.layer.borderWidth = 1 / UIScreen.main.scale
-        itemCardView.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        itemTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        itemTitleLabel.font = .preferredFont(forTextStyle: .title2)
+        itemTitleLabel.adjustsFontForContentSizeCategory = true
+        itemTitleLabel.numberOfLines = 0
+        itemTitleLabel.isUserInteractionEnabled = true
+        itemTitleLabel.accessibilityTraits.insert(.button)
+        itemTitleLabel.accessibilityLabel = "Item title"
+        itemTitleLabel.accessibilityHint = "Double tap to edit the title"
+        itemTitleLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapItemCard)))
+        itemTitleLabel.backgroundColor = .secondarySystemBackground
+        itemTitleLabel.layer.cornerRadius = 16
+        itemTitleLabel.layer.cornerCurve = .continuous
+        itemTitleLabel.layer.borderWidth = 1 / UIScreen.main.scale
+        itemTitleLabel.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        itemTitleLabel.layer.masksToBounds = true
+        itemTitleLabel.contentInsets = UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14)
 
-        itemTextLabel.translatesAutoresizingMaskIntoConstraints = false
-        itemTextLabel.font = .preferredFont(forTextStyle: .title2)
-        itemTextLabel.adjustsFontForContentSizeCategory = true
-        itemTextLabel.textColor = .label
-        itemTextLabel.numberOfLines = 0
+        itemTitleEditor.translatesAutoresizingMaskIntoConstraints = false
+        itemTitleEditor.delegate = self
+        itemTitleEditor.isEditable = true
+        itemTitleEditor.isSelectable = true
+        itemTitleEditor.isUserInteractionEnabled = true
+        itemTitleEditor.setContentHuggingPriority(.required, for: .vertical)
+        itemTitleEditor.setContentCompressionResistancePriority(.required, for: .vertical)
+        itemTitleEditor.font = .preferredFont(forTextStyle: .title2)
+        itemTitleEditor.adjustsFontForContentSizeCategory = true
+        itemTitleEditor.textColor = .label
+        itemTitleEditor.backgroundColor = .secondarySystemBackground
+        itemTitleEditor.layer.cornerRadius = 16
+        itemTitleEditor.layer.cornerCurve = .continuous
+        itemTitleEditor.layer.borderWidth = 1 / UIScreen.main.scale
+        itemTitleEditor.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        itemTitleEditor.layer.masksToBounds = true
+        itemTitleEditor.isScrollEnabled = false
+        itemTitleEditor.textContainerInset = UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14)
+        itemTitleEditor.textContainer.lineFragmentPadding = 0
+        itemTitleEditor.keyboardType = .default
+        itemTitleEditor.autocapitalizationType = .sentences
+        itemTitleEditor.accessibilityLabel = "Edit item title"
+        itemTitleEditor.accessibilityHint = "Edit the item title"
+        itemTitleEditor.isHidden = true
 
-        itemCardView.addSubview(itemTextLabel)
-        NSLayoutConstraint.activate([
-            itemTextLabel.leadingAnchor.constraint(equalTo: itemCardView.leadingAnchor, constant: 14),
-            itemTextLabel.trailingAnchor.constraint(equalTo: itemCardView.trailingAnchor, constant: -14),
-            itemTextLabel.topAnchor.constraint(equalTo: itemCardView.topAnchor, constant: 14),
-            itemTextLabel.bottomAnchor.constraint(equalTo: itemCardView.bottomAnchor, constant: -14)
-        ])
+        let minHeight = itemTitleEditor.heightAnchor.constraint(greaterThanOrEqualToConstant: itemTextMinHeight)
+        minHeight.priority = .required
+        minHeight.isActive = true
+        itemTitleMinHeightConstraint = minHeight
 
         chipsRow.axis = .horizontal
         chipsRow.alignment = .center
@@ -185,9 +296,47 @@ private extension ItemDetailSheetViewController {
         chipsRow.addArrangedSubview(dateChip)
         chipsRow.addArrangedSubview(UIView())
 
+        dateChip.isUserInteractionEnabled = true
+        dateChip.accessibilityTraits = [.button]
+        dateChip.accessibilityHint = "Double tap to change the date"
+        dateChip.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapDateChip)))
+
+        datePicker.translatesAutoresizingMaskIntoConstraints = false
+        datePicker.datePickerMode = .date
+        if #available(iOS 14.0, *) {
+            datePicker.preferredDatePickerStyle = .inline
+        }
+        datePicker.date = draftDate
+        datePicker.addTarget(self, action: #selector(dateDidChange), for: .valueChanged)
+        datePicker.isHidden = true
+
         actionsRow.axis = .vertical
         actionsRow.alignment = .fill
         actionsRow.spacing = 10
+
+        if #available(iOS 15.0, *) {
+            var saveConfig = UIButton.Configuration.tinted()
+            saveConfig.cornerStyle = .large
+            saveConfig.baseForegroundColor = .systemBlue
+            saveConfig.baseBackgroundColor = UIColor.systemBlue.withAlphaComponent(0.12)
+            saveConfig.image = UIImage(systemName: "checkmark.circle")
+            saveConfig.imagePadding = 8
+            saveConfig.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)
+            saveButton.configuration = saveConfig
+        } else {
+            saveButton.setImage(UIImage(systemName: "checkmark.circle"), for: .normal)
+            saveButton.tintColor = .systemBlue
+            saveButton.setTitleColor(.systemBlue, for: .normal)
+            saveButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 14, bottom: 12, right: 14)
+            saveButton.layer.cornerRadius = 14
+            saveButton.layer.borderWidth = 1 / UIScreen.main.scale
+            saveButton.layer.borderColor = UIColor.systemBlue.withAlphaComponent(0.25).cgColor
+            saveButton.layer.cornerCurve = .continuous
+        }
+        saveButton.setTitle("Save changes", for: .normal)
+        saveButton.titleLabel?.font = .preferredFont(forTextStyle: .headline)
+        saveButton.titleLabel?.adjustsFontForContentSizeCategory = true
+        saveButton.addTarget(self, action: #selector(didTapSave), for: .touchUpInside)
 
         if #available(iOS 15.0, *) {
             var toggleConfig = UIButton.Configuration.filled()
@@ -207,30 +356,6 @@ private extension ItemDetailSheetViewController {
         toggleCompletedButton.titleLabel?.font = .preferredFont(forTextStyle: .headline)
         toggleCompletedButton.titleLabel?.adjustsFontForContentSizeCategory = true
         toggleCompletedButton.addTarget(self, action: #selector(didTapToggleCompleted), for: .touchUpInside)
-
-        if #available(iOS 15.0, *) {
-            var editConfig = UIButton.Configuration.tinted()
-            editConfig.cornerStyle = .large
-            editConfig.baseForegroundColor = .greenColor
-            editConfig.baseBackgroundColor = UIColor.greenColor.withAlphaComponent(0.14)
-            editConfig.image = UIImage(systemName: "pencil")
-            editConfig.imagePadding = 8
-            editConfig.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)
-            editButton.configuration = editConfig
-        } else {
-            editButton.setImage(UIImage(systemName: "pencil"), for: .normal)
-            editButton.tintColor = .greenColor
-            editButton.setTitleColor(.greenColor, for: .normal)
-            editButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 14, bottom: 12, right: 14)
-            editButton.layer.cornerRadius = 14
-            editButton.layer.borderWidth = 1 / UIScreen.main.scale
-            editButton.layer.borderColor = UIColor.greenColor.withAlphaComponent(0.35).cgColor
-            editButton.layer.cornerCurve = .continuous
-        }
-        editButton.setTitle("Edit item", for: .normal)
-        editButton.titleLabel?.font = .preferredFont(forTextStyle: .headline)
-        editButton.titleLabel?.adjustsFontForContentSizeCategory = true
-        editButton.addTarget(self, action: #selector(didTapEdit), for: .touchUpInside)
 
         let quickRow = UIStackView(arrangedSubviews: [copyButton, shareButton])
         quickRow.axis = .horizontal
@@ -286,13 +411,15 @@ private extension ItemDetailSheetViewController {
         shareButton.titleLabel?.adjustsFontForContentSizeCategory = true
         shareButton.addTarget(self, action: #selector(didTapShare), for: .touchUpInside)
 
+        actionsRow.addArrangedSubview(saveButton)
         actionsRow.addArrangedSubview(toggleCompletedButton)
-        actionsRow.addArrangedSubview(editButton)
         actionsRow.addArrangedSubview(quickRow)
 
         contentStack.addArrangedSubview(headerRow)
-        contentStack.addArrangedSubview(itemCardView)
+        contentStack.addArrangedSubview(itemTitleLabel)
+        contentStack.addArrangedSubview(itemTitleEditor)
         contentStack.addArrangedSubview(chipsRow)
+        contentStack.addArrangedSubview(datePicker)
         contentStack.addArrangedSubview(actionsRow)
 
         NSLayoutConstraint.activate([
@@ -309,14 +436,19 @@ private extension ItemDetailSheetViewController {
         ])
 
         headerIconView.image = UIImage(systemName: "doc.text")
+
+        updateSaveState()
+
+        // Always show the entire title by expanding with its content.
+        // The outer scroll view will handle scrolling when the overall card content is tall.
+        itemTitleEditor.isScrollEnabled = false
+        itemTitleEditor.text = draftText
+        applyDraftTitleToLabel()
     }
 
     func applyItemToUI(animated: Bool) {
         let updates = {
-            self.itemTextLabel.text = self.item.text
-            self.itemTextLabel.accessibilityLabel = self.item.text
-
-            let addedText = Self.dateFormatter.string(from: self.item.date)
+            let addedText = Self.dateFormatter.string(from: self.draftDate)
             self.dateChip.configure(
                 text: "Added \(addedText)",
                 systemImageName: "calendar",
@@ -364,15 +496,90 @@ private extension ItemDetailSheetViewController {
                 self.headerIconView.backgroundColor = .greenColor
             }
 
+            let labelText = self.draftText.trimmingCharacters(in: .whitespacesAndNewlines)
             self.view.accessibilityLabel = self.item.isCompleted
-                ? "\(self.item.text). Completed. Added \(addedText)"
-                : "\(self.item.text). Added \(addedText)"
+                ? "\(labelText). Completed. Added \(addedText)"
+                : "\(labelText). Added \(addedText)"
         }
 
         if animated {
             UIView.animate(withDuration: 0.2, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: updates)
         } else {
             updates()
+        }
+    }
+
+    func updateSaveState() {
+        let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let hasText = !trimmed.isEmpty
+
+        let hasTextChange = trimmed != item.text
+        let hasDateChange = !Calendar.current.isDate(draftDate, inSameDayAs: item.date)
+        let canSave = hasText && (hasTextChange || hasDateChange)
+
+        saveButton.isEnabled = canSave
+        saveButton.alpha = canSave ? 1.0 : 0.5
+    }
+
+    func updateTitleEditorScrolling() {
+        // Intentionally no-op: the title editor expands to fit all lines.
+        itemTitleEditor.isScrollEnabled = false
+    }
+
+    func beginEditingTitle() {
+        itemTitleEditor.text = draftText
+        itemTitleLabel.isHidden = true
+        itemTitleEditor.isHidden = false
+        updateItemTitleEditorHeight(animated: false)
+        itemTitleEditor.becomeFirstResponder()
+    }
+
+    func endEditingTitle() {
+        itemTitleEditor.resignFirstResponder()
+        itemTitleEditor.isHidden = true
+        itemTitleLabel.isHidden = false
+        itemTitleEditorHeightConstraint?.isActive = false
+        itemTitleEditorHeightConstraint = nil
+        applyDraftTitleToLabel()
+    }
+
+    func applyDraftTitleToLabel() {
+        let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            itemTitleLabel.text = "Title"
+            itemTitleLabel.textColor = .secondaryLabel
+        } else {
+            itemTitleLabel.text = trimmed
+            itemTitleLabel.textColor = .label
+        }
+        itemTitleLabel.accessibilityValue = trimmed
+    }
+
+    func updateItemTitleEditorHeight(animated: Bool) {
+        guard !itemTitleEditor.isHidden else { return }
+
+        view.layoutIfNeeded()
+
+        // In a stack view with layoutMarginsRelativeArrangement, arranged subviews are laid out inside margins.
+        let availableWidth = max(1, contentStack.bounds.width - contentStack.layoutMargins.left - contentStack.layoutMargins.right)
+        let fitting = itemTitleEditor.sizeThatFits(CGSize(width: availableWidth, height: .greatestFiniteMagnitude))
+        let targetHeight = max(itemTextMinHeight, fitting.height)
+
+        if itemTitleEditorHeightConstraint == nil {
+            let c = itemTitleEditor.heightAnchor.constraint(equalToConstant: targetHeight)
+            c.priority = .required
+            c.isActive = true
+            itemTitleEditorHeightConstraint = c
+        } else {
+            itemTitleEditorHeightConstraint?.constant = targetHeight
+        }
+
+        if animated {
+            UIView.animate(withDuration: 0.15, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut]) {
+                self.view.layoutIfNeeded()
+            }
+        } else {
+            view.layoutIfNeeded()
         }
     }
 }
@@ -434,4 +641,172 @@ private final class ChipView: UIView {
         accessibilityLabel = text
     }
 }
+
+extension ItemDetailSheetViewController: UITextViewDelegate {
+    func textViewDidChange(_ textView: UITextView) {
+        draftText = textView.text ?? ""
+        updateItemTitleEditorHeight(animated: false)
+        updateSaveState()
+    }
+
+    func textViewDidEndEditing(_ textView: UITextView) {
+        endEditingTitle()
+    }
+}
+
+extension ItemDetailSheetViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        guard let touchedView = touch.view else { return true }
+
+        // Don't dismiss the keyboard / steal touches while the user interacts with the editor or date picker.
+        if touchedView.isDescendant(of: itemTitleEditor) { return false }
+        if touchedView.isDescendant(of: itemTitleLabel) { return false }
+        if touchedView.isDescendant(of: datePicker) { return false }
+
+        return true
+    }
+}
+
+private final class InsetLabel: UILabel {
+    var contentInsets: UIEdgeInsets = .zero {
+        didSet { invalidateIntrinsicContentSize() }
+    }
+
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: rect.inset(by: contentInsets))
+    }
+
+    override var intrinsicContentSize: CGSize {
+        let size = super.intrinsicContentSize
+        return CGSize(
+            width: size.width + contentInsets.left + contentInsets.right,
+            height: size.height + contentInsets.top + contentInsets.bottom
+        )
+    }
+}
+
+#if DEBUG
+import SwiftUI
+
+@available(iOS 13.0, *)
+private final class ItemDetailPreviewHostViewController: UIViewController {
+    private let detail: ItemDetailSheetViewController
+
+    init(item: ChalkboardItem) {
+        self.detail = ItemDetailSheetViewController(item: item)
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+
+        let dim = UIView()
+        dim.translatesAutoresizingMaskIntoConstraints = false
+        dim.backgroundColor = UIColor.black.withAlphaComponent(0.18)
+        view.addSubview(dim)
+
+        NSLayoutConstraint.activate([
+            dim.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            dim.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            dim.topAnchor.constraint(equalTo: view.topAnchor),
+            dim.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+
+        let cardContainer = UIView()
+        cardContainer.translatesAutoresizingMaskIntoConstraints = false
+        cardContainer.backgroundColor = .clear
+        cardContainer.layer.shadowColor = UIColor.black.cgColor
+        cardContainer.layer.shadowOpacity = 0.18
+        cardContainer.layer.shadowRadius = 16
+        cardContainer.layer.shadowOffset = CGSize(width: 0, height: 10)
+        view.addSubview(cardContainer)
+
+        let cardContent = UIView()
+        cardContent.translatesAutoresizingMaskIntoConstraints = false
+        cardContent.backgroundColor = .systemBackground
+        cardContent.layer.cornerRadius = 18
+        cardContent.layer.cornerCurve = .continuous
+        cardContent.layer.masksToBounds = true
+        cardContainer.addSubview(cardContent)
+
+        addChild(detail)
+        detail.view.translatesAutoresizingMaskIntoConstraints = false
+        cardContent.addSubview(detail.view)
+        detail.didMove(toParent: self)
+
+        let maxWidth: CGFloat = 460
+        let preferred = detail.preferredContentSize
+        let preferredW = (preferred.width > 0 ? preferred.width : 460)
+        let preferredH = (preferred.height > 0 ? preferred.height : 560)
+
+        NSLayoutConstraint.activate([
+            cardContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            cardContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            cardContainer.widthAnchor.constraint(lessThanOrEqualToConstant: maxWidth),
+            cardContainer.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 16),
+            cardContainer.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -16),
+            cardContainer.heightAnchor.constraint(lessThanOrEqualTo: view.heightAnchor, multiplier: 0.82),
+
+            cardContent.leadingAnchor.constraint(equalTo: cardContainer.leadingAnchor),
+            cardContent.trailingAnchor.constraint(equalTo: cardContainer.trailingAnchor),
+            cardContent.topAnchor.constraint(equalTo: cardContainer.topAnchor),
+            cardContent.bottomAnchor.constraint(equalTo: cardContainer.bottomAnchor),
+
+            detail.view.leadingAnchor.constraint(equalTo: cardContent.leadingAnchor),
+            detail.view.trailingAnchor.constraint(equalTo: cardContent.trailingAnchor),
+            detail.view.topAnchor.constraint(equalTo: cardContent.topAnchor),
+            detail.view.bottomAnchor.constraint(equalTo: cardContent.bottomAnchor)
+        ])
+
+        // Give the card a concrete baseline size so it doesn't collapse in previews.
+        let width = cardContainer.widthAnchor.constraint(equalToConstant: min(maxWidth, preferredW))
+        width.priority = .defaultHigh
+        width.isActive = true
+
+        let height = cardContainer.heightAnchor.constraint(equalToConstant: preferredH)
+        height.priority = .defaultHigh
+        height.isActive = true
+    }
+}
+
+@available(iOS 13.0, *)
+private struct ItemDetailPreview: UIViewControllerRepresentable {
+    let item: ChalkboardItem
+
+    func makeUIViewController(context: Context) -> UIViewController {
+        ItemDetailPreviewHostViewController(item: item)
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+}
+
+@available(iOS 13.0, *)
+struct ItemDetailSheetViewController_Previews: PreviewProvider {
+    static var previews: some View {
+        Group {
+            ItemDetailPreview(item: ChalkboardItem(
+                text: "Quick item",
+                date: Date(),
+                isCompleted: false
+            ))
+            .previewDisplayName("Detail Card (Short)")
+
+            ItemDetailPreview(item: ChalkboardItem(
+                text: "This is a very long item title meant to test multi-line layout in the card detail view. Tap the title to edit it, and make sure the entire text is visible and wraps nicely without clipping.",
+                date: Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date(),
+                isCompleted: false
+            ))
+            .previewDisplayName("Detail Card (Long)")
+        }
+        .previewLayout(.sizeThatFits)
+        .frame(width: 390, height: 820)
+        .padding()
+    }
+}
+#endif
 

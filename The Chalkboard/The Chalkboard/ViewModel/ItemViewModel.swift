@@ -7,7 +7,11 @@
 
 import UIKit
 
-class ItemViewModel {
+protocol ViewStateProtocol {
+    var viewState: ViewState<[ChalkboardItem]> { get }
+}
+
+class ItemViewModel: ViewStateProtocol {
     var items = [ChalkboardItem]()
     var isOpen = false
     
