@@ -13,36 +13,40 @@ struct HomeView: View {
     
     var body: some View {
         NavigationView  {
-            VStack {
-                TagTextEditor(viewModel: viewModel)
-                
-                switch viewModel.viewState {
-                case .empty:
-                    Text("No tags yet. Add one above.")
-                        .foregroundColor(.secondary)
-                        .font(.body)
-                        .padding(.top, 24)
+            ZStack {
+                Color.appBackground.ignoresSafeArea()
+                VStack {
+                    TagTextEditor(viewModel: viewModel)
                     
-                case .loaded:
-                    VStack(alignment: .leading, spacing: 4) {
-                        ForEach(viewModel.rows, id:\.self) { rows in
-                            HStack(spacing: 6) {
-                                ForEach(rows) { row in
-                                    TagView(row: row, viewModel: viewModel)
+                    switch viewModel.viewState {
+                    case .empty:
+                        Text("No tags yet. Add one above.")
+                            .foregroundColor(.appTextSecondary)
+                            .font(.body)
+                            .padding(.top, 24)
+                        
+                    case .loaded:
+                        // Render pre-packed rows so tags wrap cleanly without manual geometry in the view.
+                        VStack(alignment: .leading, spacing: 4) {
+                            ForEach(viewModel.rows, id:\.self) { rows in
+                                HStack(spacing: 6) {
+                                    ForEach(rows) { row in
+                                        TagView(row: row, viewModel: viewModel)
+                                    }
                                 }
+                                .frame(height: 28)
+                                .padding(.bottom, 10)
                             }
-                            .frame(height: 28)
-                            .padding(.bottom, 10)
                         }
+                        .padding(24)
+                        
+                    default:
+                        EmptyView()
                     }
-                    .padding(24)
-                    
-                default:
-                    EmptyView()
+                    Spacer()
                 }
-                .navigationTitle("The New Chalkboard")
-                Spacer()
             }
+            .navigationTitle("The New Chalkboard")
         }
     }
 }
@@ -58,14 +62,15 @@ struct TagTextEditor: View {
             viewModel.addTag()
         })
         .font(.title2)
+        .foregroundColor(.appTextPrimary)
         .onSubmit {
+            // Clear after submission so subsequent tags don’t start with the previous text.
             viewModel.tagInputText = ""
         }
         .padding()
         .overlay(
             RoundedRectangle(cornerRadius: 5)
-                .strokeBorder()
-                .foregroundColor(Color(.systemGray4))
+                .strokeBorder(Color.appBorder, lineWidth: 1)
         )
         .padding()
     }

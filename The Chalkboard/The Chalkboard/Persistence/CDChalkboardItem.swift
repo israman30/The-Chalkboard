@@ -17,5 +17,6 @@ extension CDChalkboardItem {
     @NSManaged var date: Date
     @NSManaged var isCompleted: Bool
     @NSManaged var sortOrder: Int64
+    @NSManaged var prioritySeverityRaw: Int16
 }
 

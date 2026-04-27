@@ -13,7 +13,7 @@ protocol ItemDetailSheetProtocol {
 
 protocol ItemDetailSheetEventProtocol {
     var onToggleCompleted: ((Bool) -> Void)? { get set }
-    var onUpdate: ((String, Date) -> Void)? { get set }
+    var onUpdate: ((String, Date, ChalkboardItemPrioritySeverity?) -> Void)? { get set }
 }
 
 extension ItemDetailSheetViewController: ItemDetailSheetProtocol, ItemDetailSheetEventProtocol { }
@@ -21,11 +21,16 @@ extension ItemDetailSheetViewController: ItemDetailSheetProtocol, ItemDetailShee
 final class ItemDetailSheetViewController: UIViewController {
     var item: ChalkboardItem
     var onToggleCompleted: ((Bool) -> Void)?
-    var onUpdate: ((String, Date) -> Void)?
+    var onUpdate: ((String, Date, ChalkboardItemPrioritySeverity?) -> Void)?
     private let centeredCardTransition = CenteredCardTransitioningDelegate()
 
+    // Draft state decouples editing from persistence:
+    // - the user can freely edit/clear/change dates
+    // - nothing is committed until “Save changes”
+    // This also keeps “Cancel/Close” semantics intuitive.
     private var draftText: String
     private var draftDate: Date
+    private var draftPrioritySeverity: ChalkboardItemPrioritySeverity?
 
     private let scrollView = UIScrollView()
     private let contentStack = UIStackView()
@@ -37,11 +42,13 @@ final class ItemDetailSheetViewController: UIViewController {
 
     private let itemTitleLabel = InsetLabel()
     private let itemTitleEditor = AutoGrowingTextView()
+    private let clearTitleButton = UIButton(type: .system)
     private var itemTitleMinHeightConstraint: NSLayoutConstraint?
     private var itemTitleEditorHeightConstraint: NSLayoutConstraint?
 
     private let chipsRow = UIStackView()
     private let statusChip = ChipView()
+    private let priorityChip = ChipView()
     private let dateChip = ChipView()
     private let datePicker = UIDatePicker()
 
@@ -55,6 +62,7 @@ final class ItemDetailSheetViewController: UIViewController {
     private var backgroundTapGesture: UITapGestureRecognizer?
 
     private let itemTextMinHeight: CGFloat = 44
+    private let clearButtonSize: CGFloat = 24
 
     private static let dateFormatter: DateFormatter = {
         let df = DateFormatter()
@@ -63,12 +71,17 @@ final class ItemDetailSheetViewController: UIViewController {
         return df
     }()
 
-    init(item: ChalkboardItem, onToggleCompleted: ((Bool) -> Void)? = nil, onUpdate: ((String, Date) -> Void)? = nil) {
+    init(
+        item: ChalkboardItem,
+        onToggleCompleted: ((Bool) -> Void)? = nil,
+        onUpdate: ((String, Date, ChalkboardItemPrioritySeverity?) -> Void)? = nil
+    ) {
         self.item = item
         self.onToggleCompleted = onToggleCompleted
         self.onUpdate = onUpdate
         self.draftText = item.text
         self.draftDate = item.date
+        self.draftPrioritySeverity = item.prioritySeverity
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .custom
         transitioningDelegate = centeredCardTransition
@@ -81,7 +94,7 @@ final class ItemDetailSheetViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .appBackground
         setupUI()
         applyItemToUI(animated: false)
     }
@@ -104,20 +117,48 @@ final class ItemDetailSheetViewController: UIViewController {
     }
 
     @objc private func didTapSave() {
+        // Treat whitespace-only edits as empty so we don’t persist “invisible” titles.
         let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
         item.text = trimmed
         item.date = draftDate
+        item.prioritySeverity = draftPrioritySeverity
+        // “Draft becomes canonical” for this screen once saved.
         draftText = trimmed
         applyDraftTitleToLabel()
 
         view.endEditing(true)
-        onUpdate?(trimmed, draftDate)
+        onUpdate?(trimmed, draftDate, draftPrioritySeverity)
         UINotificationFeedbackGenerator().notificationOccurred(.success)
 
         updateSaveState()
         applyItemToUI(animated: true)
+    }
+
+    @objc private func didTapPriorityChip() {
+        let sheet = UIAlertController(title: "Priority", message: nil, preferredStyle: .actionSheet)
+
+        let apply: (ChalkboardItemPrioritySeverity?) -> Void = { [weak self] severity in
+            guard let self else { return }
+            self.draftPrioritySeverity = severity
+            self.updateSaveState()
+            self.applyItemToUI(animated: true)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        }
+
+        sheet.addAction(UIAlertAction(title: "None", style: .default) { _ in apply(nil) })
+        sheet.addAction(UIAlertAction(title: ChalkboardItemPrioritySeverity.low.title, style: .default) { _ in apply(.low) })
+        sheet.addAction(UIAlertAction(title: ChalkboardItemPrioritySeverity.medium.title, style: .default) { _ in apply(.medium) })
+        sheet.addAction(UIAlertAction(title: ChalkboardItemPrioritySeverity.high.title, style: .default) { _ in apply(.high) })
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let popover = sheet.popoverPresentationController {
+            popover.sourceView = priorityChip
+            popover.sourceRect = priorityChip.bounds
+        }
+
+        present(sheet, animated: true)
     }
 
     @objc private func didTapDateChip() {
@@ -131,6 +172,7 @@ final class ItemDetailSheetViewController: UIViewController {
         }
 
         if isShowingDatePicker {
+            // When expanding the inline picker, ensure it’s actually visible within the scroll view.
             let rectInScroll = datePicker.convert(datePicker.bounds, to: scrollView)
             scrollView.scrollRectToVisible(rectInScroll.insetBy(dx: 0, dy: -20), animated: true)
         }
@@ -143,6 +185,7 @@ final class ItemDetailSheetViewController: UIViewController {
     }
 
     @objc private func didTapBackground() {
+        // Background taps dismiss the keyboard without interfering with controls inside the card.
         view.endEditing(true)
     }
 
@@ -163,6 +206,14 @@ final class ItemDetailSheetViewController: UIViewController {
             popover.sourceRect = shareButton.bounds
         }
         present(activity, animated: true)
+    }
+
+    @objc private func didTapClearTitle() {
+        draftText = ""
+        itemTitleEditor.text = ""
+        updateItemTitleEditorHeight(animated: false)
+        updateSaveState()
+        updateClearTitleButtonVisibility(animated: true)
     }
 }
 
@@ -197,14 +248,14 @@ private extension ItemDetailSheetViewController {
 
         headerIconView.translatesAutoresizingMaskIntoConstraints = false
         headerIconView.contentMode = .center
-        headerIconView.tintColor = .white
-        headerIconView.backgroundColor = .greenColor
+        headerIconView.tintColor = .appOnAccent
+        headerIconView.backgroundColor = .appAccent
         headerIconView.layer.cornerRadius = 14
         headerIconView.layer.cornerCurve = .continuous
 
         headerTitleLabel.font = .preferredFont(forTextStyle: .headline)
         headerTitleLabel.adjustsFontForContentSizeCategory = true
-        headerTitleLabel.textColor = .label
+        headerTitleLabel.textColor = .appTextPrimary
         headerTitleLabel.numberOfLines = 1
         headerTitleLabel.text = "Item details"
 
@@ -212,12 +263,12 @@ private extension ItemDetailSheetViewController {
             var closeConfig = UIButton.Configuration.plain()
             closeConfig.image = UIImage(systemName: "xmark.circle.fill")
             closeConfig.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
-            closeConfig.baseForegroundColor = .secondaryLabel
+            closeConfig.baseForegroundColor = .appTextSecondary
             closeConfig.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 6)
             closeButton.configuration = closeConfig
         } else {
             closeButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-            closeButton.tintColor = .secondaryLabel
+            closeButton.tintColor = .appTextSecondary
             closeButton.contentEdgeInsets = UIEdgeInsets(top: 6, left: 6, bottom: 6, right: 6)
         }
         closeButton.accessibilityLabel = "Close"
@@ -246,11 +297,11 @@ private extension ItemDetailSheetViewController {
         itemTitleLabel.accessibilityLabel = "Item title"
         itemTitleLabel.accessibilityHint = "Double tap to edit the title"
         itemTitleLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapItemCard)))
-        itemTitleLabel.backgroundColor = .secondarySystemBackground
+        itemTitleLabel.backgroundColor = .appSurface
         itemTitleLabel.layer.cornerRadius = 16
         itemTitleLabel.layer.cornerCurve = .continuous
         itemTitleLabel.layer.borderWidth = 1 / UIScreen.main.scale
-        itemTitleLabel.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        itemTitleLabel.layer.borderColor = UIColor.appBorder.cgColor
         itemTitleLabel.layer.masksToBounds = true
         itemTitleLabel.contentInsets = UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14)
 
@@ -263,21 +314,32 @@ private extension ItemDetailSheetViewController {
         itemTitleEditor.setContentCompressionResistancePriority(.required, for: .vertical)
         itemTitleEditor.font = .preferredFont(forTextStyle: .title2)
         itemTitleEditor.adjustsFontForContentSizeCategory = true
-        itemTitleEditor.textColor = .label
-        itemTitleEditor.backgroundColor = .secondarySystemBackground
+        itemTitleEditor.textColor = .appTextPrimary
+        itemTitleEditor.backgroundColor = .appSurface
         itemTitleEditor.layer.cornerRadius = 16
         itemTitleEditor.layer.cornerCurve = .continuous
         itemTitleEditor.layer.borderWidth = 1 / UIScreen.main.scale
-        itemTitleEditor.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        itemTitleEditor.layer.borderColor = UIColor.appBorder.cgColor
         itemTitleEditor.layer.masksToBounds = true
         itemTitleEditor.isScrollEnabled = false
-        itemTitleEditor.textContainerInset = UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14)
+        // Extra trailing inset leaves room for the clear ("x") button.
+        itemTitleEditor.textContainerInset = UIEdgeInsets(top: 14, left: 14, bottom: 14, right: 14 + clearButtonSize + 10)
         itemTitleEditor.textContainer.lineFragmentPadding = 0
         itemTitleEditor.keyboardType = .default
         itemTitleEditor.autocapitalizationType = .sentences
         itemTitleEditor.accessibilityLabel = "Edit item title"
         itemTitleEditor.accessibilityHint = "Edit the item title"
         itemTitleEditor.isHidden = true
+
+        clearTitleButton.translatesAutoresizingMaskIntoConstraints = false
+        clearTitleButton.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
+        clearTitleButton.tintColor = .appTextSecondary
+        clearTitleButton.accessibilityLabel = "Clear text"
+        clearTitleButton.accessibilityHint = "Clears the item title text"
+        clearTitleButton.addTarget(self, action: #selector(didTapClearTitle), for: .touchUpInside)
+        clearTitleButton.isHidden = true
+        clearTitleButton.alpha = 0
+        itemTitleEditor.addSubview(clearTitleButton)
 
         let minHeight = itemTitleEditor.heightAnchor.constraint(greaterThanOrEqualToConstant: itemTextMinHeight)
         minHeight.priority = .required
@@ -290,9 +352,11 @@ private extension ItemDetailSheetViewController {
         chipsRow.distribution = .fillProportionally
 
         statusChip.setContentHuggingPriority(.required, for: .horizontal)
+        priorityChip.setContentHuggingPriority(.required, for: .horizontal)
         dateChip.setContentHuggingPriority(.required, for: .horizontal)
 
         chipsRow.addArrangedSubview(statusChip)
+        chipsRow.addArrangedSubview(priorityChip)
         chipsRow.addArrangedSubview(dateChip)
         chipsRow.addArrangedSubview(UIView())
 
@@ -300,6 +364,11 @@ private extension ItemDetailSheetViewController {
         dateChip.accessibilityTraits = [.button]
         dateChip.accessibilityHint = "Double tap to change the date"
         dateChip.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapDateChip)))
+
+        priorityChip.isUserInteractionEnabled = true
+        priorityChip.accessibilityTraits = [.button]
+        priorityChip.accessibilityHint = "Double tap to change the priority"
+        priorityChip.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapPriorityChip)))
 
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.datePickerMode = .date
@@ -317,20 +386,20 @@ private extension ItemDetailSheetViewController {
         if #available(iOS 15.0, *) {
             var saveConfig = UIButton.Configuration.tinted()
             saveConfig.cornerStyle = .large
-            saveConfig.baseForegroundColor = .systemBlue
-            saveConfig.baseBackgroundColor = UIColor.systemBlue.withAlphaComponent(0.12)
+            saveConfig.baseForegroundColor = .appAccent
+            saveConfig.baseBackgroundColor = UIColor.appAccent.withAlphaComponent(0.14)
             saveConfig.image = UIImage(systemName: "checkmark.circle")
             saveConfig.imagePadding = 8
             saveConfig.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)
             saveButton.configuration = saveConfig
         } else {
             saveButton.setImage(UIImage(systemName: "checkmark.circle"), for: .normal)
-            saveButton.tintColor = .systemBlue
-            saveButton.setTitleColor(.systemBlue, for: .normal)
+            saveButton.tintColor = .appAccent
+            saveButton.setTitleColor(.appAccent, for: .normal)
             saveButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 14, bottom: 12, right: 14)
             saveButton.layer.cornerRadius = 14
             saveButton.layer.borderWidth = 1 / UIScreen.main.scale
-            saveButton.layer.borderColor = UIColor.systemBlue.withAlphaComponent(0.25).cgColor
+            saveButton.layer.borderColor = UIColor.appBorder.cgColor
             saveButton.layer.cornerCurve = .continuous
         }
         saveButton.setTitle("Save changes", for: .normal)
@@ -341,14 +410,14 @@ private extension ItemDetailSheetViewController {
         if #available(iOS 15.0, *) {
             var toggleConfig = UIButton.Configuration.filled()
             toggleConfig.cornerStyle = .large
-            toggleConfig.baseBackgroundColor = .greenColor
-            toggleConfig.baseForegroundColor = .white
+            toggleConfig.baseBackgroundColor = .appAccent
+            toggleConfig.baseForegroundColor = .appOnAccent
             toggleConfig.imagePadding = 8
             toggleConfig.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)
             toggleCompletedButton.configuration = toggleConfig
         } else {
-            toggleCompletedButton.backgroundColor = .greenColor
-            toggleCompletedButton.setTitleColor(.white, for: .normal)
+            toggleCompletedButton.backgroundColor = .appAccent
+            toggleCompletedButton.setTitleColor(.appOnAccent, for: .normal)
             toggleCompletedButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 14, bottom: 12, right: 14)
             toggleCompletedButton.layer.cornerRadius = 14
             toggleCompletedButton.layer.cornerCurve = .continuous
@@ -366,8 +435,8 @@ private extension ItemDetailSheetViewController {
         if #available(iOS 15.0, *) {
             var copyConfig = UIButton.Configuration.tinted()
             copyConfig.cornerStyle = .large
-            copyConfig.baseForegroundColor = .secondaryLabel
-            copyConfig.baseBackgroundColor = .tertiarySystemBackground
+            copyConfig.baseForegroundColor = .appTextSecondary
+            copyConfig.baseBackgroundColor = .appElevatedSurface
             copyConfig.image = UIImage(systemName: "doc.on.doc")
             copyConfig.imagePadding = 8
             copyConfig.title = "Copy"
@@ -375,10 +444,10 @@ private extension ItemDetailSheetViewController {
             copyButton.configuration = copyConfig
         } else {
             copyButton.setImage(UIImage(systemName: "doc.on.doc"), for: .normal)
-            copyButton.tintColor = .secondaryLabel
+            copyButton.tintColor = .appTextSecondary
             copyButton.setTitle("Copy", for: .normal)
-            copyButton.setTitleColor(.secondaryLabel, for: .normal)
-            copyButton.backgroundColor = .tertiarySystemBackground
+            copyButton.setTitleColor(.appTextSecondary, for: .normal)
+            copyButton.backgroundColor = .appElevatedSurface
             copyButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
             copyButton.layer.cornerRadius = 14
             copyButton.layer.cornerCurve = .continuous
@@ -390,8 +459,8 @@ private extension ItemDetailSheetViewController {
         if #available(iOS 15.0, *) {
             var shareConfig = UIButton.Configuration.tinted()
             shareConfig.cornerStyle = .large
-            shareConfig.baseForegroundColor = .secondaryLabel
-            shareConfig.baseBackgroundColor = .tertiarySystemBackground
+            shareConfig.baseForegroundColor = .appTextSecondary
+            shareConfig.baseBackgroundColor = .appElevatedSurface
             shareConfig.image = UIImage(systemName: "square.and.arrow.up")
             shareConfig.imagePadding = 8
             shareConfig.title = "Share"
@@ -399,10 +468,10 @@ private extension ItemDetailSheetViewController {
             shareButton.configuration = shareConfig
         } else {
             shareButton.setImage(UIImage(systemName: "square.and.arrow.up"), for: .normal)
-            shareButton.tintColor = .secondaryLabel
+            shareButton.tintColor = .appTextSecondary
             shareButton.setTitle("Share", for: .normal)
-            shareButton.setTitleColor(.secondaryLabel, for: .normal)
-            shareButton.backgroundColor = .tertiarySystemBackground
+            shareButton.setTitleColor(.appTextSecondary, for: .normal)
+            shareButton.backgroundColor = .appElevatedSurface
             shareButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
             shareButton.layer.cornerRadius = 14
             shareButton.layer.cornerCurve = .continuous
@@ -435,6 +504,13 @@ private extension ItemDetailSheetViewController {
             contentStack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor)
         ])
 
+        NSLayoutConstraint.activate([
+            clearTitleButton.widthAnchor.constraint(equalToConstant: clearButtonSize),
+            clearTitleButton.heightAnchor.constraint(equalToConstant: clearButtonSize),
+            clearTitleButton.trailingAnchor.constraint(equalTo: itemTitleEditor.trailingAnchor, constant: -(14)),
+            clearTitleButton.topAnchor.constraint(equalTo: itemTitleEditor.topAnchor, constant: 12)
+        ])
+
         headerIconView.image = UIImage(systemName: "doc.text")
 
         updateSaveState()
@@ -444,6 +520,7 @@ private extension ItemDetailSheetViewController {
         itemTitleEditor.isScrollEnabled = false
         itemTitleEditor.text = draftText
         applyDraftTitleToLabel()
+        updateClearTitleButtonVisibility(animated: false)
     }
 
     func applyItemToUI(animated: Bool) {
@@ -452,16 +529,32 @@ private extension ItemDetailSheetViewController {
             self.dateChip.configure(
                 text: "Added \(addedText)",
                 systemImageName: "calendar",
-                tintColor: .secondaryLabel,
-                backgroundColor: UIColor.tertiarySystemBackground
+                tintColor: .appTextSecondary,
+                backgroundColor: UIColor.appElevatedSurface
             )
+
+            if let severity = self.draftPrioritySeverity {
+                self.priorityChip.configure(
+                    text: "Priority: \(severity.title)",
+                    systemImageName: severity.systemImageName,
+                    tintColor: severity.tagForegroundColor,
+                    backgroundColor: severity.tagColor
+                )
+            } else {
+                self.priorityChip.configure(
+                    text: "Priority: None",
+                    systemImageName: "flag",
+                    tintColor: .appTextSecondary,
+                    backgroundColor: UIColor.appElevatedSurface
+                )
+            }
 
             if self.item.isCompleted {
                 self.statusChip.configure(
                     text: "Completed",
                     systemImageName: "checkmark.circle.fill",
-                    tintColor: UIColor.greenColor,
-                    backgroundColor: UIColor.greenColor.withAlphaComponent(0.12)
+                    tintColor: UIColor.appAccent,
+                    backgroundColor: UIColor.appAccent.withAlphaComponent(0.16)
                 )
                 if #available(iOS 15.0, *) {
                     var toggleConfig = self.toggleCompletedButton.configuration ?? UIButton.Configuration.filled()
@@ -474,13 +567,13 @@ private extension ItemDetailSheetViewController {
                     self.toggleCompletedButton.tintColor = .white
                 }
                 self.headerIconView.image = UIImage(systemName: "checkmark.circle.fill")
-                self.headerIconView.backgroundColor = .greenColor
+                self.headerIconView.backgroundColor = .appAccent
             } else {
                 self.statusChip.configure(
                     text: "Active",
                     systemImageName: "circle.fill",
-                    tintColor: .secondaryLabel,
-                    backgroundColor: UIColor.tertiarySystemBackground
+                    tintColor: .appTextSecondary,
+                    backgroundColor: UIColor.appElevatedSurface
                 )
                 if #available(iOS 15.0, *) {
                     var toggleConfig = self.toggleCompletedButton.configuration ?? UIButton.Configuration.filled()
@@ -493,13 +586,14 @@ private extension ItemDetailSheetViewController {
                     self.toggleCompletedButton.tintColor = .white
                 }
                 self.headerIconView.image = UIImage(systemName: "doc.text")
-                self.headerIconView.backgroundColor = .greenColor
+                self.headerIconView.backgroundColor = .appAccent
             }
 
             let labelText = self.draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let priorityText = self.draftPrioritySeverity.map { " Priority \($0.title)." } ?? ""
             self.view.accessibilityLabel = self.item.isCompleted
-                ? "\(labelText). Completed. Added \(addedText)"
-                : "\(labelText). Added \(addedText)"
+                ? "\(labelText). Completed.\(priorityText) Added \(addedText)"
+                : "\(labelText).\(priorityText) Added \(addedText)"
         }
 
         if animated {
@@ -514,8 +608,10 @@ private extension ItemDetailSheetViewController {
         let hasText = !trimmed.isEmpty
 
         let hasTextChange = trimmed != item.text
+        // Only compare at day granularity so time components don’t accidentally enable “Save”.
         let hasDateChange = !Calendar.current.isDate(draftDate, inSameDayAs: item.date)
-        let canSave = hasText && (hasTextChange || hasDateChange)
+        let hasPriorityChange = draftPrioritySeverity != item.prioritySeverity
+        let canSave = hasText && (hasTextChange || hasDateChange || hasPriorityChange)
 
         saveButton.isEnabled = canSave
         saveButton.alpha = canSave ? 1.0 : 0.5
@@ -531,6 +627,7 @@ private extension ItemDetailSheetViewController {
         itemTitleLabel.isHidden = true
         itemTitleEditor.isHidden = false
         updateItemTitleEditorHeight(animated: false)
+        updateClearTitleButtonVisibility(animated: false)
         itemTitleEditor.becomeFirstResponder()
     }
 
@@ -547,10 +644,10 @@ private extension ItemDetailSheetViewController {
         let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
             itemTitleLabel.text = "Title"
-            itemTitleLabel.textColor = .secondaryLabel
+            itemTitleLabel.textColor = .appTextSecondary
         } else {
             itemTitleLabel.text = trimmed
-            itemTitleLabel.textColor = .label
+            itemTitleLabel.textColor = .appTextPrimary
         }
         itemTitleLabel.accessibilityValue = trimmed
     }
@@ -582,6 +679,30 @@ private extension ItemDetailSheetViewController {
             view.layoutIfNeeded()
         }
     }
+
+    func updateClearTitleButtonVisibility(animated: Bool) {
+        let trimmed = itemTitleEditor.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let shouldShow = !itemTitleEditor.isHidden && !trimmed.isEmpty
+
+        if shouldShow {
+            clearTitleButton.isHidden = false
+        }
+
+        let updates = {
+            self.clearTitleButton.alpha = shouldShow ? 1.0 : 0.0
+        }
+
+        let completion: (Bool) -> Void = { _ in
+            self.clearTitleButton.isHidden = !shouldShow
+        }
+
+        if animated {
+            UIView.animate(withDuration: 0.15, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: updates, completion: completion)
+        } else {
+            updates()
+            completion(true)
+        }
+    }
 }
 
 private final class ChipView: UIView {
@@ -592,7 +713,7 @@ private final class ChipView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
 
-        backgroundColor = .tertiarySystemBackground
+        backgroundColor = .appElevatedSurface
         layer.cornerRadius = 12
         layer.cornerCurve = .continuous
 
@@ -603,11 +724,11 @@ private final class ChipView: UIView {
 
         iconView.translatesAutoresizingMaskIntoConstraints = false
         iconView.contentMode = .scaleAspectFit
-        iconView.tintColor = .secondaryLabel
+        iconView.tintColor = .appTextSecondary
 
         label.font = .preferredFont(forTextStyle: .subheadline)
         label.adjustsFontForContentSizeCategory = true
-        label.textColor = .secondaryLabel
+        label.textColor = .appTextSecondary
         label.numberOfLines = 1
 
         addSubview(stack)
@@ -647,6 +768,7 @@ extension ItemDetailSheetViewController: UITextViewDelegate {
         draftText = textView.text ?? ""
         updateItemTitleEditorHeight(animated: false)
         updateSaveState()
+        updateClearTitleButtonVisibility(animated: true)
     }
 
     func textViewDidEndEditing(_ textView: UITextView) {
@@ -703,7 +825,7 @@ private final class ItemDetailPreviewHostViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .appBackground
 
         let dim = UIView()
         dim.translatesAutoresizingMaskIntoConstraints = false
@@ -728,7 +850,7 @@ private final class ItemDetailPreviewHostViewController: UIViewController {
 
         let cardContent = UIView()
         cardContent.translatesAutoresizingMaskIntoConstraints = false
-        cardContent.backgroundColor = .systemBackground
+        cardContent.backgroundColor = .appBackground
         cardContent.layer.cornerRadius = 18
         cardContent.layer.cornerCurve = .continuous
         cardContent.layer.masksToBounds = true

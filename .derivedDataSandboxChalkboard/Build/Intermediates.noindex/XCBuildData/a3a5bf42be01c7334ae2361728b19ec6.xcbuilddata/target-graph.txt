@@ -1,0 +1,2 @@
+Target dependency graph (1 target)
+Target 'The Chalkboard' in project 'The Chalkboard' (no dependencies)

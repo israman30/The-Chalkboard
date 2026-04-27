@@ -37,14 +37,18 @@ class TagsViewModel: TagsProtocol {
     }
     
     func getTags() {
+        // Pack tags into rows based on available screen width.
+        // This keeps the view layer simple: it renders `rows` without needing geometry readers.
         var addedRows: [[TagModel]] = []
         var currentRow: [TagModel] = []
         var totalWidth: CGFloat = 0
         let screenWidth = UIScreen.screenWidth - 10
+        // Mirrors `CustomTag` padding + the close button area + inter-tag spacing.
         let tagSpacing: CGFloat = 14 + 30 + 6 + 5
         
         if !tags.isEmpty {
             for index in 0..<tags.count {
+                // Cache measured widths so we don’t recalculate during the packing pass.
                 tags[index].size = tags[index].name.getSize()
             }
             
@@ -52,6 +56,7 @@ class TagsViewModel: TagsProtocol {
                 totalWidth += (tag.size + tagSpacing)
                 
                 if totalWidth > screenWidth {
+                    // Start a new row when the next tag would overflow.
                     totalWidth = (tag.size + tagSpacing)
                     addedRows.append(currentRow)
                     currentRow.removeAll()

@@ -11,7 +11,7 @@ extension MainController {
     
     func setMainUI() {
         navigationController?.navigationBar.prefersLargeTitles = true
-        navigationItem.rightBarButtonItem?.tintColor = .label
+        navigationItem.rightBarButtonItem?.tintColor = .appAccent
         
         /// TableView
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -21,7 +21,7 @@ extension MainController {
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 70
         tableView.keyboardDismissMode = .onDrag
-        tableView.backgroundColor = .systemBackground
+        tableView.backgroundColor = .appBackground
         tableView.separatorStyle = .none
         tableView.alwaysBounceVertical = true
         tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 16, right: 0)
@@ -30,19 +30,26 @@ extension MainController {
         inputContainerView.clipsToBounds = true
         inputTextView.translatesAutoresizingMaskIntoConstraints = false
         inputPlaceholderLabel.translatesAutoresizingMaskIntoConstraints = false
+        clearInputButton.translatesAutoresizingMaskIntoConstraints = false
 
         inputContainerView.addSubview(inputTextView)
         inputContainerView.addSubview(inputPlaceholderLabel)
+        inputContainerView.addSubview(clearInputButton)
 
         NSLayoutConstraint.activate([
             inputTextView.leadingAnchor.constraint(equalTo: inputContainerView.leadingAnchor, constant: 10),
-            inputTextView.trailingAnchor.constraint(equalTo: inputContainerView.trailingAnchor, constant: -10),
+            inputTextView.trailingAnchor.constraint(equalTo: clearInputButton.leadingAnchor, constant: -clearInputButtonSpacing),
             inputTextView.topAnchor.constraint(equalTo: inputContainerView.topAnchor, constant: 10),
             inputTextView.bottomAnchor.constraint(equalTo: inputContainerView.bottomAnchor, constant: -10),
 
             inputPlaceholderLabel.leadingAnchor.constraint(equalTo: inputTextView.leadingAnchor),
             inputPlaceholderLabel.trailingAnchor.constraint(lessThanOrEqualTo: inputTextView.trailingAnchor),
-            inputPlaceholderLabel.topAnchor.constraint(equalTo: inputTextView.topAnchor)
+            inputPlaceholderLabel.topAnchor.constraint(equalTo: inputTextView.topAnchor),
+
+            clearInputButton.trailingAnchor.constraint(equalTo: inputContainerView.trailingAnchor, constant: -10),
+            clearInputButton.topAnchor.constraint(equalTo: inputContainerView.topAnchor, constant: 10),
+            clearInputButton.widthAnchor.constraint(equalToConstant: clearInputButtonSize),
+            clearInputButton.heightAnchor.constraint(equalToConstant: clearInputButtonSize)
         ])
 
         inputBarStackView.arrangedSubviews.forEach { inputBarStackView.removeArrangedSubview($0); $0.removeFromSuperview() }
@@ -51,7 +58,7 @@ extension MainController {
         // Keep the Add button from shrinking when text is long.
         inputBarStackView.distribution = .fill
         inputBarStackView.axis = .horizontal
-        inputBarStackView.alignment = .top
+        inputBarStackView.alignment = .bottom
         inputBarStackView.spacing = 10
         inputBarStackView.translatesAutoresizingMaskIntoConstraints = false
         inputBarStackView.clipsToBounds = true
@@ -65,13 +72,15 @@ extension MainController {
 
         NSLayoutConstraint.activate([
             addButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 72),
-            addButton.heightAnchor.constraint(equalToConstant: 44),
+            addButton.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
             inputContainerView.heightAnchor.constraint(equalTo: inputBarStackView.heightAnchor)
         ])
         
         view.addSubview(tableView)
         view.addSubview(inputBarStackView)
         
+        // The input bar is collapsible: we animate this single height constraint between 0 and a
+        // measured height, which keeps the rest of the layout stable.
         inputHeightConstrain = inputBarStackView.heightAnchor.constraint(equalToConstant: 0.0)
         inputBarStackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor).isActive = true
         inputBarStackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10).isActive = true

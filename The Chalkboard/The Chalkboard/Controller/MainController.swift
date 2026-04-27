@@ -8,7 +8,7 @@
 import UIKit
 
 protocol PresentPickerProtocol {
-    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date) -> Void)
+    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date, ChalkboardItemPrioritySeverity?) -> Void)
 }
 
 class MainController: UIViewController {
@@ -21,18 +21,18 @@ class MainController: UIViewController {
     
     let inputContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
+        view.backgroundColor = .appSurface
         view.layer.cornerRadius = 12
         view.layer.cornerCurve = .continuous
         view.layer.borderWidth = 1 / UIScreen.main.scale
-        view.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        view.layer.borderColor = UIColor.appBorder.cgColor
         return view
     }()
 
     let inputTextView: UITextView = {
         let tv = AutoGrowingTextView()
         tv.backgroundColor = .clear
-        tv.textColor = .label
+        tv.textColor = .appTextPrimary
         tv.font = UIFont(name: "GillSans-Italic", size: UIFont.preferredFont(forTextStyle: .title3).pointSize)
         tv.adjustsFontForContentSizeCategory = true
         tv.textContainerInset = .zero
@@ -47,7 +47,7 @@ class MainController: UIViewController {
     let inputPlaceholderLabel: UILabel = {
         let label = UILabel()
         label.text = "Enter something.."
-        label.textColor = .secondaryLabel
+        label.textColor = .appTextSecondary
         label.font = UIFont(name: "GillSans-Italic", size: UIFont.preferredFont(forTextStyle: .title3).pointSize)
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 1
@@ -57,11 +57,21 @@ class MainController: UIViewController {
     
     let addButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitleColor(UIColor.systemGray, for: .normal)
-        btn.titleLabel?.font = UIFont(name: "GillSans-Italic", size: 20)
-        btn.backgroundColor = .systemGray4
         btn.isEnabled = false
-        btn.layer.cornerRadius = 2
+        btn.clipsToBounds = true
+        btn.layer.cornerCurve = .continuous
+        return btn
+    }()
+
+    let clearInputButton: UIButton = {
+        let btn = UIButton(type: .system)
+        let config = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+        btn.setImage(UIImage(systemName: "xmark.circle.fill", withConfiguration: config), for: .normal)
+        btn.tintColor = .appTextSecondary
+        btn.accessibilityLabel = "Clear text"
+        btn.accessibilityHint = "Clears the entry text"
+        btn.isHidden = true
+        btn.alpha = 0
         return btn
     }()
 
@@ -76,22 +86,27 @@ class MainController: UIViewController {
     var inputHeightConstrain: NSLayoutConstraint?
     private let inputMinHeight: CGFloat = 50
     private let inputMaxHeight: CGFloat = 150
+    let clearInputButtonSize: CGFloat = 24
+    let clearInputButtonSpacing: CGFloat = 8
 
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "The Chalkboard"
+        view.backgroundColor = .appBackground
         updateInputToggleButton()
         addButton.addTarget(self, action: #selector(add), for: .touchUpInside)
+        clearInputButton.addTarget(self, action: #selector(didTapClearInput), for: .touchUpInside)
         inputTextView.delegate = self
         setMainUI()
-        // READ: Load persisted items from Core Data.
+        configureAddButton()
+        // Initial sync from disk so the table is always driven by persisted data.
         loadItems()
         applyViewState()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // READ: Refresh from disk in case another screen changed items.
+        // Refresh from disk in case a presented sheet updated an item.
         loadItems()
     }
 
@@ -100,6 +115,7 @@ class MainController: UIViewController {
             itemViewModel.items = try itemStore.fetchAll()
             tableView.reloadData()
         } catch {
+            // In debug builds, make fetch failures loud—this screen can’t function without its store.
             assertionFailure("Failed to fetch items: \(error)")
         }
     }
@@ -115,33 +131,53 @@ class MainController: UIViewController {
     }
     
     @objc func input() {
+        guard itemViewModel.isOpen else {
+            inputPlaceholderLabel.isHidden = true
+            addButton.isEnabled = false
+            updateAddButtonPresentation(animated: false)
+            updateClearInputButtonVisibility(animated: false)
+            return
+        }
+
         let trimmed = (inputTextView.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let hasInput = !trimmed.isEmpty
 
         inputPlaceholderLabel.isHidden = !trimmed.isEmpty
         addButton.isEnabled = hasInput
-        addButton.setTitleColor(hasInput ? .white : .systemGray, for: .normal)
-        addButton.backgroundColor = hasInput ? .greenColor : .systemGray4
+        updateAddButtonPresentation(animated: true)
+        updateClearInputButtonVisibility(animated: true)
 
         updateInputHeight(animated: true)
     }
     
     @objc func add() {
+        guard itemViewModel.isOpen else { return }
+        // Prevent stacking sheets/alerts if the user taps “Add” repeatedly.
+        guard presentedViewController == nil else { return }
+
         let rawText = inputTextView.text ?? ""
         let inputText = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !inputText.isEmpty else { return }
 
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         view.endEditing(true)
 
-        presentDatePicker(title: "Date added", initialDate: Date()) { [weak self] selectedDate in
+        // “Date added” is a user-controlled attribute, so we collect it up-front (before persisting).
+        presentDatePicker(title: "Date added", initialDate: Date()) { [weak self] selectedDate, selectedPriority in
             guard let self else { return }
 
             self.inputTextView.text = ""
             self.input()
 
             do {
-                // CREATE: Persist the new item, then append to the in-memory list driving the table view.
-                let newItem = try self.itemStore.create(text: inputText, date: selectedDate, isCompleted: false)
+                // Persist first, then update the in-memory list that drives the table view.
+                // This keeps the UI consistent with the store if persistence fails.
+                let newItem = try self.itemStore.create(
+                    text: inputText,
+                    date: selectedDate,
+                    isCompleted: false,
+                    prioritySeverity: selectedPriority
+                )
                 let newIndex = self.itemViewModel.items.count
                 self.itemViewModel.items.append(newItem)
                 self.applyViewState()
@@ -151,10 +187,13 @@ class MainController: UIViewController {
                     self.tableView.performBatchUpdates {
                         self.tableView.insertRows(at: [indexPath], with: .automatic)
                     } completion: { _ in
+                        // Scroll so the new item is visible even when the list is long.
                         self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
                     }
                 }
             } catch {
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
                 assertionFailure("Failed to create item: \(error)")
             }
         }
@@ -164,20 +203,55 @@ class MainController: UIViewController {
         itemViewModel.isOpen.toggle()
         
         inputHeightConstrain?.constant = itemViewModel.isOpen ? preferredOpenInputHeight() : 0
-        addButton.setTitle(itemViewModel.isOpen ? "Add" : "", for: .normal)
+        updateAddButtonPresentation(animated: false)
         
         if !itemViewModel.isOpen {
             view.endEditing(true)
             // Prevent placeholder from flashing when the bar is collapsed to 0.
             inputPlaceholderLabel.isHidden = true
+            addButton.isEnabled = false
+            updateClearInputButtonVisibility(animated: false)
         }
         updateInputToggleButton()
         animateLayout()
 
         if itemViewModel.isOpen {
+            input()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) { [weak self] in
                 self?.inputTextView.becomeFirstResponder()
             }
+        }
+    }
+
+    @objc private func didTapClearInput() {
+        inputTextView.text = ""
+        input()
+        if itemViewModel.isOpen {
+            inputTextView.becomeFirstResponder()
+        }
+    }
+
+    private func updateClearInputButtonVisibility(animated: Bool) {
+        let trimmed = (inputTextView.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let shouldShow = itemViewModel.isOpen && !trimmed.isEmpty
+
+        if shouldShow {
+            clearInputButton.isHidden = false
+        }
+
+        let updates = {
+            self.clearInputButton.alpha = shouldShow ? 1.0 : 0.0
+        }
+
+        let completion: (Bool) -> Void = { _ in
+            self.clearInputButton.isHidden = !shouldShow
+        }
+
+        if animated {
+            UIView.animate(withDuration: 0.12, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: updates, completion: completion)
+        } else {
+            updates()
+            completion(true)
         }
     }
     
@@ -187,6 +261,87 @@ class MainController: UIViewController {
         }
     }
 
+}
+
+private extension MainController {
+    func configureAddButton() {
+        addButton.accessibilityLabel = "Add"
+        addButton.accessibilityHint = "Adds the new item after selecting a date"
+        addButton.titleLabel?.adjustsFontForContentSizeCategory = true
+
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.filled()
+            config.cornerStyle = .capsule
+            config.image = UIImage(systemName: "plus")
+            config.imagePadding = 6
+            config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 14, bottom: 10, trailing: 14)
+            config.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 15, weight: .semibold)
+
+            if let base = UIFont(name: "GillSans-Italic", size: UIFont.preferredFont(forTextStyle: .headline).pointSize) {
+                let scaled = UIFontMetrics(forTextStyle: .headline).scaledFont(for: base)
+                config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                    var outgoing = incoming
+                    outgoing.font = scaled
+                    return outgoing
+                }
+            }
+            addButton.configuration = config
+
+            addButton.configurationUpdateHandler = { [weak self] button in
+                guard let self else { return }
+                var config = button.configuration ?? UIButton.Configuration.filled()
+
+                let showTitle = self.itemViewModel.isOpen
+                let enabled = button.isEnabled && showTitle
+                config.title = showTitle ? "Add" : ""
+                if enabled, button.isHighlighted {
+                    config.baseBackgroundColor = UIColor.appAccentPressed
+                } else {
+                    config.baseBackgroundColor = enabled ? .appAccent : UIColor.appElevatedSurface
+                }
+                config.baseForegroundColor = enabled ? .appOnAccent : UIColor.appTextSecondary
+                button.configuration = config
+            }
+        } else {
+            addButton.titleLabel?.font = UIFont(name: "GillSans-Italic", size: 20)
+            addButton.setTitle("Add", for: .normal)
+            addButton.setTitleColor(.appTextSecondary, for: .normal)
+            addButton.setImage(UIImage(systemName: "plus"), for: .normal)
+            addButton.imageView?.contentMode = .scaleAspectFit
+            addButton.tintColor = .appTextSecondary
+            addButton.semanticContentAttribute = .forceLeftToRight
+            addButton.contentHorizontalAlignment = .center
+            addButton.titleEdgeInsets = UIEdgeInsets(top: 0, left: 6, bottom: 0, right: -6)
+            addButton.backgroundColor = .appElevatedSurface
+            addButton.layer.cornerRadius = 22
+            addButton.contentEdgeInsets = UIEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
+        }
+
+        updateAddButtonPresentation(animated: false)
+    }
+
+    func updateAddButtonPresentation(animated: Bool) {
+        let updates = {
+            if #available(iOS 15.0, *) {
+                self.addButton.setNeedsUpdateConfiguration()
+            } else {
+                let showTitle = self.itemViewModel.isOpen
+                self.addButton.setTitle(showTitle ? "Add" : "", for: .normal)
+
+                let enabled = self.addButton.isEnabled && showTitle
+                self.addButton.setTitleColor(enabled ? .appOnAccent : .appTextSecondary, for: .normal)
+                self.addButton.tintColor = enabled ? .appOnAccent : .appTextSecondary
+                self.addButton.backgroundColor = enabled ? .appAccent : .appElevatedSurface
+                self.addButton.alpha = enabled ? 1.0 : 0.85
+            }
+        }
+
+        if animated {
+            UIView.transition(with: addButton, duration: 0.15, options: [.transitionCrossDissolve, .allowUserInteraction], animations: updates)
+        } else {
+            updates()
+        }
+    }
 }
 
 protocol InputHeightProtocol {
@@ -207,7 +362,8 @@ extension MainController: InputHeightProtocol {
         view.layoutIfNeeded()
 
         let availableWidth = max(1, inputContainerView.bounds.width)
-        let padding: CGFloat = 20 // left + right inside the input container
+        // Left/right padding plus reserved trailing space for the clear button.
+        let padding: CGFloat = 20 + clearInputButtonSize + clearInputButtonSpacing
         let textWidth = max(1, availableWidth - padding)
 
         let fitting = inputTextView.sizeThatFits(CGSize(width: textWidth, height: .greatestFiniteMagnitude))
@@ -256,10 +412,12 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
                 let indexPath = tableView.indexPath(for: cell)
             else { return }
             
+            // Optimistic UI update: flip locally, persist, then re-render this row.
+            // If persistence fails, we assert in debug so we catch store issues early.
             self.itemViewModel.items[indexPath.row].isCompleted.toggle()
             let updated = self.itemViewModel.items[indexPath.row]
             do {
-                // UPDATE: Persist the completion toggle.
+                // Persist the completion state so it survives app relaunch.
                 _ = try self.itemStore.setCompleted(id: updated.id, isCompleted: updated.isCompleted)
             } catch {
                 assertionFailure("Failed to update completion: \(error)")
@@ -287,7 +445,7 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
 
             let item = self.itemViewModel.items[indexPath.row]
             do {
-                // DELETE: Remove from Core Data first, then update the table view.
+                // Delete from the store first; only mutate UI state once persistence succeeds.
                 try self.itemStore.delete(id: item.id)
                 self.itemViewModel.items.remove(at: indexPath.row)
                 applyViewState()
@@ -315,16 +473,17 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
 }
 
 extension MainController: PresentPickerProtocol {
-    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date) -> Void) {
+    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date, ChalkboardItemPrioritySeverity?) -> Void) {
         let pickerVC = DatePickerSheetViewController(
             titleText: title,
             initialDate: initialDate,
+            initialPrioritySeverity: nil,
             onPick: onPick
         )
         pickerVC.modalPresentationStyle = .pageSheet
         if #available(iOS 15.0, *) {
             if let sheet = pickerVC.sheetPresentationController {
-                sheet.detents = [.medium()]
+                sheet.detents = [.medium(), .large()]
                 sheet.prefersGrabberVisible = true
             }
         }
@@ -358,13 +517,13 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
         let container = UIView()
         
         let imageView = UIImageView(image: UIImage(systemName: "square.and.pencil"))
-        imageView.tintColor = .secondaryLabel
+        imageView.tintColor = .appTextSecondary
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
         
         let label = UILabel()
         label.text = "No items yet.\nTap + to add your first one."
-        label.textColor = .secondaryLabel
+        label.textColor = .appTextSecondary
         label.font = .preferredFont(forTextStyle: .body)
         label.adjustsFontForContentSizeCategory = true
         label.textAlignment = .center
@@ -403,12 +562,13 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
             guard let self else { return }
             let existing = self.itemViewModel.items[indexPath.row]
             do {
-                // UPDATE: Persist changes from the edit sheet.
+                // Persist changes coming from the edit sheet, then refresh the visible row.
                 let updated = try self.itemStore.update(
                     id: existing.id,
                     text: updatedText,
                     date: updatedDate,
-                    isCompleted: existing.isCompleted
+                    isCompleted: existing.isCompleted,
+                    prioritySeverity: existing.prioritySeverity
                 )
                 self.itemViewModel.items[indexPath.row] = updated
                 self.tableView.reloadRows(at: [indexPath], with: .automatic)
@@ -436,32 +596,35 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
                 self.itemViewModel.items[indexPath.row].isCompleted = isCompleted
                 let updated = self.itemViewModel.items[indexPath.row]
                 do {
-                    // UPDATE: Persist completion toggle coming from the detail sheet.
+                    // Persist completion state changes coming from the detail sheet.
                     _ = try self.itemStore.setCompleted(id: updated.id, isCompleted: updated.isCompleted)
                 } catch {
                     assertionFailure("Failed to update completion: \(error)")
                 }
                 tableView.reloadRows(at: [indexPath], with: .automatic)
-            },
-            onUpdate: { [weak self, weak tableView] updatedText, updatedDate in
-                guard let self, let tableView else { return }
-
-                let existing = self.itemViewModel.items[indexPath.row]
-                do {
-                    // UPDATE: Persist changes coming from the detail sheet.
-                    let updated = try self.itemStore.update(
-                        id: existing.id,
-                        text: updatedText,
-                        date: updatedDate,
-                        isCompleted: existing.isCompleted
-                    )
-                    self.itemViewModel.items[indexPath.row] = updated
-                    tableView.reloadRows(at: [indexPath], with: .automatic)
-                } catch {
-                    assertionFailure("Failed to update item: \(error)")
-                }
             }
         )
+
+        detailVC.onUpdate = { [weak self, weak tableView] (updatedText: String, updatedDate: Date, updatedPriority: ChalkboardItemPrioritySeverity?) in
+            guard let self, let tableView else { return }
+
+            let existing = self.itemViewModel.items[indexPath.row]
+            do {
+                // Persist title/date/priority edits coming from the detail sheet.
+                let updated = try self.itemStore.update(
+                    id: existing.id,
+                    text: updatedText,
+                    date: updatedDate,
+                    isCompleted: existing.isCompleted,
+                    prioritySeverity: updatedPriority
+                )
+                self.itemViewModel.items[indexPath.row] = updated
+                tableView.reloadRows(at: [indexPath], with: .automatic)
+            } catch {
+                assertionFailure("Failed to update item: \(error)")
+            }
+        }
+
         present(detailVC, animated: true)
     }
 }

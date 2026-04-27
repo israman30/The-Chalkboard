@@ -22,18 +22,19 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     private let containerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .secondarySystemBackground
+        view.backgroundColor = .appSurface
         view.layer.cornerRadius = 14
         if #available(iOS 13.0, *) {
             view.layer.cornerCurve = .continuous
         }
         view.layer.borderWidth = 1 / UIScreen.main.scale
-        view.layer.borderColor = UIColor.separator.withAlphaComponent(0.25).cgColor
+        view.layer.borderColor = UIColor.appBorder.cgColor
         view.layer.masksToBounds = false
         view.layer.shadowColor = UIColor.black.cgColor
         view.layer.shadowOpacity = 0.08
         view.layer.shadowRadius = 10
         view.layer.shadowOffset = CGSize(width: 0, height: 6)
+        // Shadows are expensive during fast table scrolling; rasterize this layer to reduce cost.
         view.layer.shouldRasterize = true
         view.layer.rasterizationScale = UIScreen.main.scale
         return view
@@ -45,7 +46,7 @@ final class MainCell: UITableViewCell, CellProtocol {
         let baseFont = UIFont(name: "GillSans-Italic", size: 22) ?? UIFont.preferredFont(forTextStyle: .headline)
         label.font = UIFontMetrics(forTextStyle: .headline).scaledFont(for: baseFont)
         label.adjustsFontForContentSizeCategory = true
-        label.textColor = .label
+        label.textColor = .appTextPrimary
         return label
     }()
     
@@ -54,7 +55,7 @@ final class MainCell: UITableViewCell, CellProtocol {
         var configuration = UIButton.Configuration.plain()
         configuration.image = UIImage(systemName: "info.circle")
         configuration.preferredSymbolConfigurationForImage = UIImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-        configuration.baseForegroundColor = .secondaryLabel
+        configuration.baseForegroundColor = .appTextSecondary
         configuration.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = configuration
         button.accessibilityLabel = "Show item details"
@@ -63,10 +64,23 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     private let dateLabel: UILabel = {
         let label = UILabel()
-        label.textColor = .secondaryLabel
+        label.textColor = .appTextSecondary
         label.font = .preferredFont(forTextStyle: .subheadline)
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 1
+        return label
+    }()
+
+    private let priorityTagLabel: PaddingLabel = {
+        let label = PaddingLabel()
+        label.insets = UIEdgeInsets(top: 4, left: 9, bottom: 4, right: 9)
+        label.font = .preferredFont(forTextStyle: .caption1)
+        label.adjustsFontForContentSizeCategory = true
+        label.numberOfLines = 1
+        label.layer.cornerRadius = 10
+        label.layer.cornerCurve = .continuous
+        label.layer.masksToBounds = true
+        label.accessibilityTraits.insert(.staticText)
         return label
     }()
     
@@ -94,18 +108,19 @@ final class MainCell: UITableViewCell, CellProtocol {
     }()
     
     func bind(_ item: ChalkboardItem) {
+        // Styling is data-driven so completed items can be visually distinguished (and read via VO).
         let titleAttributes: [NSAttributedString.Key: Any] = {
             if item.isCompleted {
                 return [
                     .font: titleLabel.font as Any,
-                    .foregroundColor: UIColor.secondaryLabel,
+                    .foregroundColor: UIColor.appTextSecondary,
                     .strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                    .strikethroughColor: UIColor.secondaryLabel
+                    .strikethroughColor: UIColor.appTextSecondary
                 ]
             } else {
                 return [
                     .font: titleLabel.font as Any,
-                    .foregroundColor: UIColor.label
+                    .foregroundColor: UIColor.appTextPrimary
                 ]
             }
         }()
@@ -113,11 +128,25 @@ final class MainCell: UITableViewCell, CellProtocol {
         titleLabel.attributedText = NSAttributedString(string: item.text, attributes: titleAttributes)
         let addedText = Self.dateFormatter.string(from: item.date)
         dateLabel.text = "Added \(addedText)"
+
+        if let severity = item.prioritySeverity {
+            priorityTagLabel.text = severity.title
+            priorityTagLabel.textColor = severity.tagForegroundColor
+            priorityTagLabel.backgroundColor = severity.tagColor
+            priorityTagLabel.accessibilityLabel = "Priority \(severity.title)"
+        } else {
+            priorityTagLabel.text = "None"
+            priorityTagLabel.textColor = .appTextSecondary
+            priorityTagLabel.backgroundColor = .appElevatedSurface
+            priorityTagLabel.accessibilityLabel = "Priority None"
+        }
+
+        let priorityText = item.prioritySeverity.map { ". Priority \($0.title)" } ?? ""
         
         if item.isCompleted {
-            accessibilityLabel = "\(item.text). Completed. Added \(addedText)"
+            accessibilityLabel = "\(item.text). Completed\(priorityText). Added \(addedText)"
         } else {
-            accessibilityLabel = "\(item.text). Added \(addedText)"
+            accessibilityLabel = "\(item.text)\(priorityText). Added \(addedText)"
         }
     }
     
@@ -141,11 +170,14 @@ final class MainCell: UITableViewCell, CellProtocol {
         spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         metaRowStack.addArrangedSubview(dateLabel)
+        metaRowStack.addArrangedSubview(priorityTagLabel)
         metaRowStack.addArrangedSubview(spacer)
         metaRowStack.addArrangedSubview(detailButton)
 
         dateLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
         dateLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        priorityTagLabel.setContentHuggingPriority(.required, for: .horizontal)
+        priorityTagLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         detailButton.setContentHuggingPriority(.required, for: .horizontal)
         detailButton.setContentCompressionResistancePriority(.required, for: .horizontal)
 
@@ -156,6 +188,7 @@ final class MainCell: UITableViewCell, CellProtocol {
         detailButton.addTarget(self, action: #selector(didTapDetail), for: .touchUpInside)
         
         titleLabel.isUserInteractionEnabled = true
+        // Treat the title as the primary action (toggle completed) to keep tapping ergonomic.
         titleLabel.accessibilityTraits.insert(.button)
         titleLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapTitle)))
         
@@ -184,6 +217,7 @@ final class MainCell: UITableViewCell, CellProtocol {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        // Provide a concrete shadow path for better performance than dynamic shadow rendering.
         containerView.layer.shadowPath = UIBezierPath(
             roundedRect: containerView.bounds,
             cornerRadius: containerView.layer.cornerRadius
@@ -202,8 +236,8 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     private func updateHighlight(highlighted: Bool, animated: Bool) {
         let updates = {
-            self.containerView.backgroundColor = highlighted ? .tertiarySystemBackground : .secondarySystemBackground
-            self.containerView.layer.borderColor = UIColor.separator.withAlphaComponent(highlighted ? 0.45 : 0.25).cgColor
+            self.containerView.backgroundColor = highlighted ? .appElevatedSurface : .appSurface
+            self.containerView.layer.borderColor = UIColor.appBorder.withAlphaComponent(highlighted ? 0.55 : 1.0).cgColor
         }
         
         if animated {
@@ -219,6 +253,24 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     @objc private func didTapTitle() {
         onTitleTapped?(self)
+    }
+}
+
+private final class PaddingLabel: UILabel {
+    var insets: UIEdgeInsets = .zero {
+        didSet { invalidateIntrinsicContentSize() }
+    }
+
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: rect.inset(by: insets))
+    }
+
+    override var intrinsicContentSize: CGSize {
+        let size = super.intrinsicContentSize
+        return CGSize(
+            width: size.width + insets.left + insets.right,
+            height: size.height + insets.top + insets.bottom
+        )
     }
 }
 
@@ -241,7 +293,7 @@ private struct MainCellTablePreview: UIViewRepresentable {
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 80
         tableView.separatorStyle = .none
-        tableView.backgroundColor = .systemBackground
+        tableView.backgroundColor = .appBackground
         tableView.isScrollEnabled = false
         return tableView
     }

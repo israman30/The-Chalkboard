@@ -39,10 +39,11 @@ final class EditItemSheetViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .appBackground
 
         titleLabel.text = titleText
         titleLabel.font = .preferredFont(forTextStyle: .headline)
+        titleLabel.textColor = .appTextPrimary
         titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 2
 
@@ -50,8 +51,10 @@ final class EditItemSheetViewController: UIViewController {
         textField.placeholder = "Title"
         textField.borderStyle = .roundedRect
         textField.font = .preferredFont(forTextStyle: .body)
+        textField.textColor = .appTextPrimary
+        textField.tintColor = .appAccent
         textField.autocapitalizationType = .sentences
-        textField.clearButtonMode = .whileEditing
+        textField.clearButtonMode = .always
         textField.addTarget(self, action: #selector(textDidChange), for: .editingChanged)
 
         datePicker.datePickerMode = .date
@@ -61,9 +64,11 @@ final class EditItemSheetViewController: UIViewController {
         datePicker.date = initialDate
 
         cancelButton.setTitle("Cancel", for: .normal)
+        cancelButton.tintColor = .appAccent
         cancelButton.addTarget(self, action: #selector(didTapCancel), for: .touchUpInside)
 
         doneButton.setTitle("Save", for: .normal)
+        doneButton.tintColor = .appAccent
         doneButton.titleLabel?.font = .preferredFont(forTextStyle: .headline)
         doneButton.addTarget(self, action: #selector(didTapSave), for: .touchUpInside)
 
@@ -94,6 +99,7 @@ final class EditItemSheetViewController: UIViewController {
     }
 
     private func updateDoneState() {
+        // Keep the “Save” action disabled when the title would be effectively empty.
         let trimmed = (textField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         doneButton.isEnabled = !trimmed.isEmpty
         doneButton.alpha = doneButton.isEnabled ? 1.0 : 0.5
@@ -107,6 +113,7 @@ final class EditItemSheetViewController: UIViewController {
         let trimmed = (textField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         let picked = datePicker.date
+        // Fire the save callback after the sheet is dismissed to keep transitions clean.
         dismiss(animated: true) { [onSave] in
             onSave(trimmed, picked)
         }
