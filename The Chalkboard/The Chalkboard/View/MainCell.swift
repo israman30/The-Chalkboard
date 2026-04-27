@@ -242,6 +242,7 @@ final class MainCell: UITableViewCell, CellProtocol {
         
         updateLayoutForContentSizeCategory()
         updateHighlight(highlighted: false, animated: false)
+        registerForTraitChangesIfAvailable()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -303,16 +304,13 @@ final class MainCell: UITableViewCell, CellProtocol {
         onTitleTapped?(self)
     }
     
+    @available(iOS, deprecated: 17.0)
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
-        
-        if previousTraitCollection?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
-            updateLayoutForContentSizeCategory()
-        }
-        
-        if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
-            updateHighlight(highlighted: isHighlighted || isSelected, animated: false)
-        }
+
+        // On iOS 17+, trait changes are handled via registration APIs.
+        if #available(iOS 17.0, *) { return }
+        handleTraitChanges(previousTraitCollection: previousTraitCollection)
     }
     
     override func accessibilityActivate() -> Bool {
@@ -333,6 +331,24 @@ final class MainCell: UITableViewCell, CellProtocol {
         containerView.backgroundColor = highlighted ? .appElevatedSurface : .appSurface
         containerView.layer.borderColor = UIColor.appBorder.withAlphaComponent(highlighted ? 0.55 : 1.0).cgColor
         containerView.layer.shadowOpacity = traitCollection.userInterfaceStyle == .dark ? 0.16 : 0.08
+    }
+
+    private func handleTraitChanges(previousTraitCollection: UITraitCollection?) {
+        if previousTraitCollection?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+            updateLayoutForContentSizeCategory()
+        }
+
+        if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
+            updateHighlight(highlighted: isHighlighted || isSelected, animated: false)
+        }
+    }
+
+    private func registerForTraitChangesIfAvailable() {
+        guard #available(iOS 17.0, *) else { return }
+
+        registerForTraitChanges([UITraitPreferredContentSizeCategory.self, UITraitUserInterfaceStyle.self]) { (cell: MainCell, previousTraitCollection: UITraitCollection) in
+            cell.handleTraitChanges(previousTraitCollection: previousTraitCollection)
+        }
     }
     
     @objc private func accessibilityToggleCompleted() -> Bool {
