@@ -6,8 +6,8 @@ import CoreData
 /// while keeping the UI code focused on app behavior rather than Core Data APIs.
 protocol ChalkboardItemStoring {
     func fetchAll() throws -> [ChalkboardItem]
-    func create(text: String, date: Date, isCompleted: Bool, prioritySeverity: ChalkboardItemPrioritySeverity?) throws -> ChalkboardItem
-    func update(id: UUID, text: String, date: Date, isCompleted: Bool, prioritySeverity: ChalkboardItemPrioritySeverity?) throws -> ChalkboardItem
+    func create(text: String, date: Date, dueTimeMinutes: Int?, isCompleted: Bool, prioritySeverity: ChalkboardItemPrioritySeverity?) throws -> ChalkboardItem
+    func update(id: UUID, text: String, date: Date, dueTimeMinutes: Int?, isCompleted: Bool, prioritySeverity: ChalkboardItemPrioritySeverity?) throws -> ChalkboardItem
     func setCompleted(id: UUID, isCompleted: Bool) throws -> ChalkboardItem
     func delete(id: UUID) throws
 }
@@ -39,7 +39,7 @@ final class ChalkboardItemStore: ChalkboardItemStoring {
 
     // MARK: - Create
 
-    func create(text: String, date: Date, isCompleted: Bool, prioritySeverity: ChalkboardItemPrioritySeverity?) throws -> ChalkboardItem {
+    func create(text: String, date: Date, dueTimeMinutes: Int?, isCompleted: Bool, prioritySeverity: ChalkboardItemPrioritySeverity?) throws -> ChalkboardItem {
         let ctx = persistence.viewContext
 
         let item = CDChalkboardItem(context: ctx)
@@ -47,6 +47,7 @@ final class ChalkboardItemStore: ChalkboardItemStoring {
         item.id = UUID().uuidString
         item.text = text
         item.date = date
+        item.dueTimeMinutes = dueTimeMinutes.map { NSNumber(value: Int32($0)) }
         item.isCompleted = isCompleted
         item.sortOrder = makeSortOrderNow()
         item.prioritySeverityRaw = prioritySeverity?.rawValue ?? ChalkboardItemPrioritySeverity.noneRawValue
@@ -57,12 +58,13 @@ final class ChalkboardItemStore: ChalkboardItemStoring {
 
     // MARK: - Update
 
-    func update(id: UUID, text: String, date: Date, isCompleted: Bool, prioritySeverity: ChalkboardItemPrioritySeverity?) throws -> ChalkboardItem {
+    func update(id: UUID, text: String, date: Date, dueTimeMinutes: Int?, isCompleted: Bool, prioritySeverity: ChalkboardItemPrioritySeverity?) throws -> ChalkboardItem {
         let ctx = persistence.viewContext
         let item = try fetchEntity(id: id, in: ctx)
 
         item.text = text
         item.date = date
+        item.dueTimeMinutes = dueTimeMinutes.map { NSNumber(value: Int32($0)) }
         item.isCompleted = isCompleted
         item.prioritySeverityRaw = prioritySeverity?.rawValue ?? ChalkboardItemPrioritySeverity.noneRawValue
 
@@ -126,6 +128,7 @@ private extension CDChalkboardItem {
             id: UUID(uuidString: id) ?? UUID(),
             text: text,
             date: date,
+            dueTimeMinutes: dueTimeMinutes?.intValue,
             isCompleted: isCompleted,
             prioritySeverity: severity
         )

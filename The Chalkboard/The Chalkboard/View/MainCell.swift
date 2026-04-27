@@ -106,6 +106,13 @@ final class MainCell: UITableViewCell, CellProtocol {
         df.timeStyle = .none
         return df
     }()
+
+    private static let timeFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateStyle = .none
+        df.timeStyle = .short
+        return df
+    }()
     
     func bind(_ item: ChalkboardItem) {
         // Styling is data-driven so completed items can be visually distinguished (and read via VO).
@@ -126,8 +133,15 @@ final class MainCell: UITableViewCell, CellProtocol {
         }()
 
         titleLabel.attributedText = NSAttributedString(string: item.text, attributes: titleAttributes)
-        let addedText = Self.dateFormatter.string(from: item.date)
-        dateLabel.text = "Added \(addedText)"
+        let dueDateText = Self.dateFormatter.string(from: item.date)
+        let timeText: String? = item.dueTimeMinutes.map { minutes in
+            Self.timeFormatter.string(from: Self.dateForTimePicker(minutesSinceMidnight: minutes))
+        }
+        if let timeText {
+            dateLabel.text = "Due \(dueDateText) • \(timeText)"
+        } else {
+            dateLabel.text = "Due \(dueDateText)"
+        }
 
         if let severity = item.prioritySeverity {
             priorityTagLabel.text = severity.title
@@ -142,11 +156,12 @@ final class MainCell: UITableViewCell, CellProtocol {
         }
 
         let priorityText = item.prioritySeverity.map { ". Priority \($0.title)" } ?? ""
+        let dueTimeVO: String = timeText.map { ". Due at \($0)" } ?? ""
         
         if item.isCompleted {
-            accessibilityLabel = "\(item.text). Completed\(priorityText). Added \(addedText)"
+            accessibilityLabel = "\(item.text). Completed\(priorityText). Due \(dueDateText)\(dueTimeVO)"
         } else {
-            accessibilityLabel = "\(item.text)\(priorityText). Added \(addedText)"
+            accessibilityLabel = "\(item.text)\(priorityText). Due \(dueDateText)\(dueTimeVO)"
         }
     }
     
@@ -213,6 +228,9 @@ final class MainCell: UITableViewCell, CellProtocol {
         super.prepareForReuse()
         onDetailTapped = nil
         onTitleTapped = nil
+        titleLabel.text = ""
+        dateLabel.text = ""
+        priorityTagLabel.text = ""
     }
 
     override func layoutSubviews() {
@@ -253,6 +271,14 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     @objc private func didTapTitle() {
         onTitleTapped?(self)
+    }
+}
+
+private extension MainCell {
+    static func dateForTimePicker(minutesSinceMidnight minutes: Int) -> Date {
+        let h = max(0, minutes) / 60
+        let m = max(0, minutes) % 60
+        return Calendar.current.date(bySettingHour: h, minute: m, second: 0, of: Date()) ?? Date()
     }
 }
 
