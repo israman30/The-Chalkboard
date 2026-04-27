@@ -66,6 +66,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 ///
 /// Implementation note:
 /// - This lives in `AppDelegate.swift` to avoid “file not in target membership” build issues.
+///
+protocol LocalNotificationSchedulerProtocol {
+    func requestAuthorizationIfNeeded()
+    func rescheduleDueNotification(for item: ChalkboardItem)
+    func cancelDueNotification(for itemId: UUID)
+}
+
+extension LocalNotificationScheduler: LocalNotificationSchedulerProtocol { }
+
 final class LocalNotificationScheduler {
     static let shared = LocalNotificationScheduler()
 
