@@ -15,6 +15,7 @@ extension CDChalkboardItem {
     @NSManaged var id: String
     @NSManaged var text: String
     @NSManaged var date: Date
+    @NSManaged var dueTimeMinutes: NSNumber?
     @NSManaged var isCompleted: Bool
     @NSManaged var sortOrder: Int64
     @NSManaged var prioritySeverityRaw: Int16

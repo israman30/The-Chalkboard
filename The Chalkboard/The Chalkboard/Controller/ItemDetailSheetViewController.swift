@@ -13,7 +13,7 @@ protocol ItemDetailSheetProtocol {
 
 protocol ItemDetailSheetEventProtocol {
     var onToggleCompleted: ((Bool) -> Void)? { get set }
-    var onUpdate: ((String, Date, ChalkboardItemPrioritySeverity?) -> Void)? { get set }
+    var onUpdate: ((String, Date, Int?, ChalkboardItemPrioritySeverity?) -> Void)? { get set }
 }
 
 extension ItemDetailSheetViewController: ItemDetailSheetProtocol, ItemDetailSheetEventProtocol { }
@@ -21,7 +21,7 @@ extension ItemDetailSheetViewController: ItemDetailSheetProtocol, ItemDetailShee
 final class ItemDetailSheetViewController: UIViewController {
     var item: ChalkboardItem
     var onToggleCompleted: ((Bool) -> Void)?
-    var onUpdate: ((String, Date, ChalkboardItemPrioritySeverity?) -> Void)?
+    var onUpdate: ((String, Date, Int?, ChalkboardItemPrioritySeverity?) -> Void)?
     private let centeredCardTransition = CenteredCardTransitioningDelegate()
 
     // Draft state decouples editing from persistence:
@@ -30,6 +30,7 @@ final class ItemDetailSheetViewController: UIViewController {
     // This also keeps “Cancel/Close” semantics intuitive.
     private var draftText: String
     private var draftDate: Date
+    private var draftDueTimeMinutes: Int?
     private var draftPrioritySeverity: ChalkboardItemPrioritySeverity?
 
     private let scrollView = UIScrollView()
@@ -50,7 +51,9 @@ final class ItemDetailSheetViewController: UIViewController {
     private let statusChip = ChipView()
     private let priorityChip = ChipView()
     private let dateChip = ChipView()
+    private let timeChip = ChipView()
     private let datePicker = UIDatePicker()
+    private let timePicker = UIDatePicker()
 
     private let actionsRow = UIStackView()
     private let saveButton = UIButton(type: .system)
@@ -59,6 +62,7 @@ final class ItemDetailSheetViewController: UIViewController {
     private let shareButton = UIButton(type: .system)
 
     private var isShowingDatePicker = false
+    private var isShowingTimePicker = false
     private var backgroundTapGesture: UITapGestureRecognizer?
 
     private let itemTextMinHeight: CGFloat = 44
@@ -71,16 +75,24 @@ final class ItemDetailSheetViewController: UIViewController {
         return df
     }()
 
+    private static let timeFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateStyle = .none
+        df.timeStyle = .short
+        return df
+    }()
+
     init(
         item: ChalkboardItem,
         onToggleCompleted: ((Bool) -> Void)? = nil,
-        onUpdate: ((String, Date, ChalkboardItemPrioritySeverity?) -> Void)? = nil
+        onUpdate: ((String, Date, Int?, ChalkboardItemPrioritySeverity?) -> Void)? = nil
     ) {
         self.item = item
         self.onToggleCompleted = onToggleCompleted
         self.onUpdate = onUpdate
         self.draftText = item.text
-        self.draftDate = item.date
+        self.draftDate = Calendar.current.startOfDay(for: item.date)
+        self.draftDueTimeMinutes = item.dueTimeMinutes
         self.draftPrioritySeverity = item.prioritySeverity
         super.init(nibName: nil, bundle: nil)
         modalPresentationStyle = .custom
@@ -122,14 +134,15 @@ final class ItemDetailSheetViewController: UIViewController {
         guard !trimmed.isEmpty else { return }
 
         item.text = trimmed
-        item.date = draftDate
+        item.date = Calendar.current.startOfDay(for: draftDate)
+        item.dueTimeMinutes = draftDueTimeMinutes
         item.prioritySeverity = draftPrioritySeverity
         // “Draft becomes canonical” for this screen once saved.
         draftText = trimmed
         applyDraftTitleToLabel()
 
         view.endEditing(true)
-        onUpdate?(trimmed, draftDate, draftPrioritySeverity)
+        onUpdate?(trimmed, item.date, draftDueTimeMinutes, draftPrioritySeverity)
         UINotificationFeedbackGenerator().notificationOccurred(.success)
 
         updateSaveState()
@@ -179,7 +192,62 @@ final class ItemDetailSheetViewController: UIViewController {
     }
 
     @objc private func dateDidChange() {
-        draftDate = datePicker.date
+        draftDate = Calendar.current.startOfDay(for: datePicker.date)
+        updateSaveState()
+        applyItemToUI(animated: false)
+    }
+
+    @objc private func didTapTimeChip() {
+        let sheet = UIAlertController(title: "Due time", message: nil, preferredStyle: .actionSheet)
+
+        let showPickerTitle = (draftDueTimeMinutes == nil) ? "Add time" : "Change time"
+        sheet.addAction(UIAlertAction(title: showPickerTitle, style: .default) { [weak self] _ in
+            guard let self else { return }
+            self.isShowingTimePicker = true
+            self.timePicker.isHidden = false
+            if let minutes = self.draftDueTimeMinutes {
+                self.timePicker.date = Self.dateForTimePicker(minutesSinceMidnight: minutes)
+            } else {
+                let nowMinutes = Self.minutesSinceMidnight(from: Date())
+                self.draftDueTimeMinutes = nowMinutes
+                self.timePicker.date = Self.dateForTimePicker(minutesSinceMidnight: nowMinutes)
+                self.updateSaveState()
+                self.applyItemToUI(animated: false)
+            }
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+
+            UIView.animate(withDuration: 0.2, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut]) {
+                self.view.layoutIfNeeded()
+            }
+
+            let rectInScroll = self.timePicker.convert(self.timePicker.bounds, to: self.scrollView)
+            self.scrollView.scrollRectToVisible(rectInScroll.insetBy(dx: 0, dy: -20), animated: true)
+        })
+
+        if draftDueTimeMinutes != nil {
+            sheet.addAction(UIAlertAction(title: "Remove time", style: .destructive) { [weak self] _ in
+                guard let self else { return }
+                self.draftDueTimeMinutes = nil
+                self.isShowingTimePicker = false
+                self.timePicker.isHidden = true
+                self.updateSaveState()
+                self.applyItemToUI(animated: true)
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            })
+        }
+
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let popover = sheet.popoverPresentationController {
+            popover.sourceView = timeChip
+            popover.sourceRect = timeChip.bounds
+        }
+
+        present(sheet, animated: true)
+    }
+
+    @objc private func timeDidChange() {
+        draftDueTimeMinutes = Self.minutesSinceMidnight(from: timePicker.date)
         updateSaveState()
         applyItemToUI(animated: false)
     }
@@ -354,16 +422,23 @@ private extension ItemDetailSheetViewController {
         statusChip.setContentHuggingPriority(.required, for: .horizontal)
         priorityChip.setContentHuggingPriority(.required, for: .horizontal)
         dateChip.setContentHuggingPriority(.required, for: .horizontal)
+        timeChip.setContentHuggingPriority(.required, for: .horizontal)
 
         chipsRow.addArrangedSubview(statusChip)
         chipsRow.addArrangedSubview(priorityChip)
         chipsRow.addArrangedSubview(dateChip)
+        chipsRow.addArrangedSubview(timeChip)
         chipsRow.addArrangedSubview(UIView())
 
         dateChip.isUserInteractionEnabled = true
         dateChip.accessibilityTraits = [.button]
         dateChip.accessibilityHint = "Double tap to change the date"
         dateChip.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapDateChip)))
+
+        timeChip.isUserInteractionEnabled = true
+        timeChip.accessibilityTraits = [.button]
+        timeChip.accessibilityHint = "Double tap to add or change the due time"
+        timeChip.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapTimeChip)))
 
         priorityChip.isUserInteractionEnabled = true
         priorityChip.accessibilityTraits = [.button]
@@ -378,6 +453,17 @@ private extension ItemDetailSheetViewController {
         datePicker.date = draftDate
         datePicker.addTarget(self, action: #selector(dateDidChange), for: .valueChanged)
         datePicker.isHidden = true
+
+        timePicker.translatesAutoresizingMaskIntoConstraints = false
+        timePicker.datePickerMode = .time
+        if #available(iOS 14.0, *) {
+            timePicker.preferredDatePickerStyle = .wheels
+        }
+        if let minutes = draftDueTimeMinutes {
+            timePicker.date = Self.dateForTimePicker(minutesSinceMidnight: minutes)
+        }
+        timePicker.addTarget(self, action: #selector(timeDidChange), for: .valueChanged)
+        timePicker.isHidden = true
 
         actionsRow.axis = .vertical
         actionsRow.alignment = .fill
@@ -489,6 +575,7 @@ private extension ItemDetailSheetViewController {
         contentStack.addArrangedSubview(itemTitleEditor)
         contentStack.addArrangedSubview(chipsRow)
         contentStack.addArrangedSubview(datePicker)
+        contentStack.addArrangedSubview(timePicker)
         contentStack.addArrangedSubview(actionsRow)
 
         NSLayoutConstraint.activate([
@@ -525,13 +612,30 @@ private extension ItemDetailSheetViewController {
 
     func applyItemToUI(animated: Bool) {
         let updates = {
-            let addedText = Self.dateFormatter.string(from: self.draftDate)
+            let dueDateText = Self.dateFormatter.string(from: self.draftDate)
             self.dateChip.configure(
-                text: "Added \(addedText)",
+                text: "Due \(dueDateText)",
                 systemImageName: "calendar",
                 tintColor: .appTextSecondary,
                 backgroundColor: UIColor.appElevatedSurface
             )
+
+            if let minutes = self.draftDueTimeMinutes {
+                let timeText = Self.timeFormatter.string(from: Self.dateForTimePicker(minutesSinceMidnight: minutes))
+                self.timeChip.configure(
+                    text: "Time \(timeText)",
+                    systemImageName: "clock",
+                    tintColor: .appTextSecondary,
+                    backgroundColor: UIColor.appElevatedSurface
+                )
+            } else {
+                self.timeChip.configure(
+                    text: "Time None",
+                    systemImageName: "clock",
+                    tintColor: .appTextSecondary,
+                    backgroundColor: UIColor.appElevatedSurface
+                )
+            }
 
             if let severity = self.draftPrioritySeverity {
                 self.priorityChip.configure(
@@ -591,9 +695,14 @@ private extension ItemDetailSheetViewController {
 
             let labelText = self.draftText.trimmingCharacters(in: .whitespacesAndNewlines)
             let priorityText = self.draftPrioritySeverity.map { " Priority \($0.title)." } ?? ""
+            let timeVO: String = {
+                guard let minutes = self.draftDueTimeMinutes else { return "" }
+                let timeText = Self.timeFormatter.string(from: Self.dateForTimePicker(minutesSinceMidnight: minutes))
+                return " Due at \(timeText)."
+            }()
             self.view.accessibilityLabel = self.item.isCompleted
-                ? "\(labelText). Completed.\(priorityText) Added \(addedText)"
-                : "\(labelText).\(priorityText) Added \(addedText)"
+                ? "\(labelText). Completed.\(priorityText) Due \(dueDateText).\(timeVO)"
+                : "\(labelText).\(priorityText) Due \(dueDateText).\(timeVO)"
         }
 
         if animated {
@@ -610,8 +719,9 @@ private extension ItemDetailSheetViewController {
         let hasTextChange = trimmed != item.text
         // Only compare at day granularity so time components don’t accidentally enable “Save”.
         let hasDateChange = !Calendar.current.isDate(draftDate, inSameDayAs: item.date)
+        let hasTimeChange = draftDueTimeMinutes != item.dueTimeMinutes
         let hasPriorityChange = draftPrioritySeverity != item.prioritySeverity
-        let canSave = hasText && (hasTextChange || hasDateChange || hasPriorityChange)
+        let canSave = hasText && (hasTextChange || hasDateChange || hasTimeChange || hasPriorityChange)
 
         saveButton.isEnabled = canSave
         saveButton.alpha = canSave ? 1.0 : 0.5
@@ -784,8 +894,22 @@ extension ItemDetailSheetViewController: UIGestureRecognizerDelegate {
         if touchedView.isDescendant(of: itemTitleEditor) { return false }
         if touchedView.isDescendant(of: itemTitleLabel) { return false }
         if touchedView.isDescendant(of: datePicker) { return false }
+        if touchedView.isDescendant(of: timePicker) { return false }
 
         return true
+    }
+}
+
+private extension ItemDetailSheetViewController {
+    static func minutesSinceMidnight(from date: Date) -> Int {
+        let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
+    }
+
+    static func dateForTimePicker(minutesSinceMidnight minutes: Int) -> Date {
+        let h = max(0, minutes) / 60
+        let m = max(0, minutes) % 60
+        return Calendar.current.date(bySettingHour: h, minute: m, second: 0, of: Date()) ?? Date()
     }
 }
 

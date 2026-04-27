@@ -10,11 +10,15 @@ import UIKit
 final class DatePickerSheetViewController: UIViewController {
     private let titleText: String
     private let initialDate: Date
+    private let initialDueTimeMinutes: Int?
     private let initialPrioritySeverity: ChalkboardItemPrioritySeverity?
-    private let onPick: (Date, ChalkboardItemPrioritySeverity?) -> Void
+    private let onPick: (Date, Int?, ChalkboardItemPrioritySeverity?) -> Void
 
     private let titleLabel = UILabel()
     private let datePicker = UIDatePicker()
+    private let timeLabel = UILabel()
+    private let timeToggle = UISwitch()
+    private let timePicker = UIDatePicker()
     private let priorityLabel = UILabel()
     private let priorityControl = UISegmentedControl(items: ["None", "Low", "Medium", "High"])
     private let cancelButton = UIButton(type: .system)
@@ -23,11 +27,13 @@ final class DatePickerSheetViewController: UIViewController {
     init(
         titleText: String,
         initialDate: Date,
+        initialDueTimeMinutes: Int? = nil,
         initialPrioritySeverity: ChalkboardItemPrioritySeverity? = nil,
-        onPick: @escaping (Date, ChalkboardItemPrioritySeverity?) -> Void
+        onPick: @escaping (Date, Int?, ChalkboardItemPrioritySeverity?) -> Void
     ) {
         self.titleText = titleText
         self.initialDate = initialDate
+        self.initialDueTimeMinutes = initialDueTimeMinutes
         self.initialPrioritySeverity = initialPrioritySeverity
         self.onPick = onPick
         super.init(nibName: nil, bundle: nil)
@@ -53,6 +59,25 @@ final class DatePickerSheetViewController: UIViewController {
             datePicker.preferredDatePickerStyle = .inline
         }
         datePicker.date = initialDate
+
+        timeLabel.text = "Time (optional)"
+        timeLabel.font = .preferredFont(forTextStyle: .subheadline)
+        timeLabel.adjustsFontForContentSizeCategory = true
+        timeLabel.textColor = .appTextSecondary
+        timeLabel.numberOfLines = 1
+
+        timeToggle.isOn = initialDueTimeMinutes != nil
+        timeToggle.addTarget(self, action: #selector(didToggleTime), for: .valueChanged)
+        timeToggle.accessibilityLabel = "Add time"
+
+        timePicker.datePickerMode = .time
+        if #available(iOS 14.0, *) {
+            timePicker.preferredDatePickerStyle = .wheels
+        }
+        if let minutes = initialDueTimeMinutes {
+            timePicker.date = Self.dateForTimePicker(minutesSinceMidnight: minutes)
+        }
+        timePicker.isHidden = !timeToggle.isOn
 
         priorityLabel.text = "Priority (optional)"
         priorityLabel.font = .preferredFont(forTextStyle: .subheadline)
@@ -92,7 +117,17 @@ final class DatePickerSheetViewController: UIViewController {
         priorityStack.alignment = .fill
         priorityStack.spacing = 8
 
-        let stack = UIStackView(arrangedSubviews: [titleLabel, datePicker, priorityStack, buttons])
+        let timeHeader = UIStackView(arrangedSubviews: [timeLabel, UIView(), timeToggle])
+        timeHeader.axis = .horizontal
+        timeHeader.alignment = .center
+        timeHeader.spacing = 10
+
+        let timeStack = UIStackView(arrangedSubviews: [timeHeader, timePicker])
+        timeStack.axis = .vertical
+        timeStack.alignment = .fill
+        timeStack.spacing = 8
+
+        let stack = UIStackView(arrangedSubviews: [titleLabel, datePicker, timeStack, priorityStack, buttons])
         stack.axis = .vertical
         stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -112,7 +147,8 @@ final class DatePickerSheetViewController: UIViewController {
     }
 
     @objc private func didTapDone() {
-        let picked = datePicker.date
+        let picked = Calendar.current.startOfDay(for: datePicker.date)
+        let minutes: Int? = timeToggle.isOn ? Self.minutesSinceMidnight(from: timePicker.date) : nil
         let severity: ChalkboardItemPrioritySeverity? = {
             switch priorityControl.selectedSegmentIndex {
             case 1: return .low
@@ -123,7 +159,24 @@ final class DatePickerSheetViewController: UIViewController {
         }()
         // Invoke the callback after dismissal to avoid presenting/animating over an active sheet.
         dismiss(animated: true) { [onPick] in
-            onPick(picked, severity)
+            onPick(picked, minutes, severity)
         }
+    }
+}
+
+private extension DatePickerSheetViewController {
+    @objc func didToggleTime() {
+        timePicker.isHidden = !timeToggle.isOn
+    }
+
+    static func minutesSinceMidnight(from date: Date) -> Int {
+        let comps = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return (comps.hour ?? 0) * 60 + (comps.minute ?? 0)
+    }
+
+    static func dateForTimePicker(minutesSinceMidnight minutes: Int) -> Date {
+        let h = max(0, minutes) / 60
+        let m = max(0, minutes) % 60
+        return Calendar.current.date(bySettingHour: h, minute: m, second: 0, of: Date()) ?? Date()
     }
 }

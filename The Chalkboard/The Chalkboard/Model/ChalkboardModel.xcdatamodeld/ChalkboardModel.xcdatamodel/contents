@@ -2,6 +2,7 @@
 <model name="ChalkboardModel" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="25000" systemVersion="25.0" minimumToolsVersion="Xcode 7.3" sourceLanguage="Swift">
     <entity name="CDChalkboardItem" representedClassName="CDChalkboardItem" syncable="YES">
         <attribute name="date" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dueTimeMinutes" optional="YES" attributeType="Integer 32" usesScalarValueType="NO"/>
         <attribute name="id" optional="NO" attributeType="String"/>
         <attribute name="isCompleted" optional="NO" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="prioritySeverityRaw" optional="NO" attributeType="Integer 16" defaultValueString="-1" usesScalarValueType="YES"/>

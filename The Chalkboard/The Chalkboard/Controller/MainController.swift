@@ -8,7 +8,7 @@
 import UIKit
 
 protocol PresentPickerProtocol {
-    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date, ChalkboardItemPrioritySeverity?) -> Void)
+    func presentDatePicker(title: String, initialDate: Date, initialDueTimeMinutes: Int?, onPick: @escaping (Date, Int?, ChalkboardItemPrioritySeverity?) -> Void)
 }
 
 class MainController: UIViewController {
@@ -162,8 +162,8 @@ class MainController: UIViewController {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         view.endEditing(true)
 
-        // “Date added” is a user-controlled attribute, so we collect it up-front (before persisting).
-        presentDatePicker(title: "Date added", initialDate: Date()) { [weak self] selectedDate, selectedPriority in
+        // Due date/time is user-controlled, so we collect it up-front (before persisting).
+        presentDatePicker(title: "Due date", initialDate: Date(), initialDueTimeMinutes: nil) { [weak self] selectedDate, selectedDueTimeMinutes, selectedPriority in
             guard let self else { return }
 
             self.inputTextView.text = ""
@@ -175,9 +175,11 @@ class MainController: UIViewController {
                 let newItem = try self.itemStore.create(
                     text: inputText,
                     date: selectedDate,
+                    dueTimeMinutes: selectedDueTimeMinutes,
                     isCompleted: false,
                     prioritySeverity: selectedPriority
                 )
+                LocalNotificationScheduler.shared.rescheduleDueNotification(for: newItem)
                 let newIndex = self.itemViewModel.items.count
                 self.itemViewModel.items.append(newItem)
                 self.applyViewState()
@@ -447,6 +449,7 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
             do {
                 // Delete from the store first; only mutate UI state once persistence succeeds.
                 try self.itemStore.delete(id: item.id)
+                LocalNotificationScheduler.shared.cancelDueNotification(for: item.id)
                 self.itemViewModel.items.remove(at: indexPath.row)
                 applyViewState()
 
@@ -473,10 +476,11 @@ extension MainController: UITableViewDataSource, UITableViewDelegate {
 }
 
 extension MainController: PresentPickerProtocol {
-    func presentDatePicker(title: String, initialDate: Date, onPick: @escaping (Date, ChalkboardItemPrioritySeverity?) -> Void) {
+    func presentDatePicker(title: String, initialDate: Date, initialDueTimeMinutes: Int?, onPick: @escaping (Date, Int?, ChalkboardItemPrioritySeverity?) -> Void) {
         let pickerVC = DatePickerSheetViewController(
             titleText: title,
             initialDate: initialDate,
+            initialDueTimeMinutes: initialDueTimeMinutes,
             initialPrioritySeverity: nil,
             onPick: onPick
         )
@@ -557,8 +561,9 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
         let editVC = EditItemSheetViewController(
             titleText: "Update item",
             initialText: item.text,
-            initialDate: item.date
-        ) { [weak self] updatedText, updatedDate in
+            initialDate: item.date,
+            initialDueTimeMinutes: item.dueTimeMinutes
+        ) { [weak self] updatedText, updatedDate, updatedDueTimeMinutes in
             guard let self else { return }
             let existing = self.itemViewModel.items[indexPath.row]
             do {
@@ -567,9 +572,11 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
                     id: existing.id,
                     text: updatedText,
                     date: updatedDate,
+                    dueTimeMinutes: updatedDueTimeMinutes,
                     isCompleted: existing.isCompleted,
                     prioritySeverity: existing.prioritySeverity
                 )
+                LocalNotificationScheduler.shared.rescheduleDueNotification(for: updated)
                 self.itemViewModel.items[indexPath.row] = updated
                 self.tableView.reloadRows(at: [indexPath], with: .automatic)
             } catch {
@@ -598,6 +605,11 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
                 do {
                     // Persist completion state changes coming from the detail sheet.
                     _ = try self.itemStore.setCompleted(id: updated.id, isCompleted: updated.isCompleted)
+                    if updated.isCompleted {
+                        LocalNotificationScheduler.shared.cancelDueNotification(for: updated.id)
+                    } else {
+                        LocalNotificationScheduler.shared.rescheduleDueNotification(for: updated)
+                    }
                 } catch {
                     assertionFailure("Failed to update completion: \(error)")
                 }
@@ -605,7 +617,7 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
             }
         )
 
-        detailVC.onUpdate = { [weak self, weak tableView] (updatedText: String, updatedDate: Date, updatedPriority: ChalkboardItemPrioritySeverity?) in
+        detailVC.onUpdate = { [weak self, weak tableView] (updatedText: String, updatedDate: Date, updatedDueTimeMinutes: Int?, updatedPriority: ChalkboardItemPrioritySeverity?) in
             guard let self, let tableView else { return }
 
             let existing = self.itemViewModel.items[indexPath.row]
@@ -615,9 +627,11 @@ extension MainController: StateControllerProtocol, PresentViewProtocol {
                     id: existing.id,
                     text: updatedText,
                     date: updatedDate,
+                    dueTimeMinutes: updatedDueTimeMinutes,
                     isCompleted: existing.isCompleted,
                     prioritySeverity: updatedPriority
                 )
+                LocalNotificationScheduler.shared.rescheduleDueNotification(for: updated)
                 self.itemViewModel.items[indexPath.row] = updated
                 tableView.reloadRows(at: [indexPath], with: .automatic)
             } catch {

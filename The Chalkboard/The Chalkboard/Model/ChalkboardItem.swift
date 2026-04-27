@@ -41,6 +41,9 @@ struct ChalkboardItem: Equatable {
     var id: UUID = UUID()
     var text: String
     var date: Date
+    /// Optional time-of-day (minutes since midnight) for when this item is due.
+    /// When `nil`, the item is treated as an all-day due date.
+    var dueTimeMinutes: Int? = nil
     var isCompleted: Bool = false
     var prioritySeverity: ChalkboardItemPrioritySeverity? = nil
 }
