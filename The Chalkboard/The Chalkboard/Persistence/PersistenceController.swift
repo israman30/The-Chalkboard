@@ -1,5 +1,27 @@
 import CoreData
 
+enum PersistenceControllerError: LocalizedError {
+    case persistentStoreLoadFailed(underlying: Error)
+    case saveFailed(underlying: Error)
+
+    var errorDescription: String? {
+        switch self {
+        case .persistentStoreLoadFailed:
+            return "Failed to load the app’s database."
+        case .saveFailed:
+            return "Failed to save changes."
+        }
+    }
+
+    var failureReason: String? {
+        switch self {
+        case let .persistentStoreLoadFailed(underlying),
+             let .saveFailed(underlying):
+            return String(describing: underlying)
+        }
+    }
+}
+
 /// App-wide Core Data stack.
 ///
 /// The goal of this type is to centralize Core Data configuration and provide a single
@@ -13,6 +35,8 @@ final class PersistenceController {
         let isPreview = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
         return PersistenceController(inMemory: isPreview)
     }()
+    
+    private let chalkboardModel = "ChalkboardModel"
 
     let container: NSPersistentContainer
 
@@ -21,7 +45,7 @@ final class PersistenceController {
     }
 
     init(inMemory: Bool = false) {
-        container = NSPersistentContainer(name: "ChalkboardModel")
+        container = NSPersistentContainer(name: chalkboardModel)
 
         if inMemory {
             let description = NSPersistentStoreDescription()
@@ -37,7 +61,8 @@ final class PersistenceController {
 
         container.loadPersistentStores { _, error in
             if let error {
-                assertionFailure("Failed to load Core Data store: \(error)")
+                let wrapped = PersistenceControllerError.persistentStoreLoadFailed(underlying: error)
+                assertionFailure("Failed to load Core Data store: \(wrapped)")
             }
         }
 
@@ -51,7 +76,11 @@ final class PersistenceController {
     func saveIfNeeded(context: NSManagedObjectContext? = nil) throws {
         let ctx = context ?? viewContext
         guard ctx.hasChanges else { return }
-        try ctx.save()
+        do {
+            try ctx.save()
+        } catch {
+            throw PersistenceControllerError.saveFailed(underlying: error)
+        }
     }
 
     /// Runs work on a background context owned by the container.

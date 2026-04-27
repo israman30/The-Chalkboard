@@ -228,6 +228,9 @@ final class MainCell: UITableViewCell, CellProtocol {
         super.prepareForReuse()
         onDetailTapped = nil
         onTitleTapped = nil
+        titleLabel.text = ""
+        dateLabel.text = ""
+        priorityTagLabel.text = ""
     }
 
     override func layoutSubviews() {
