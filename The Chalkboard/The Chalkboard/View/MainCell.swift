@@ -52,6 +52,25 @@ final class MainCell: UITableViewCell, CellProtocol {
         return view
     }()
     
+    private let statusIconView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .center
+        iv.tintColor = .appTextSecondary
+        iv.isAccessibilityElement = false
+        if #available(iOS 15.0, *) {
+            iv.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+        }
+        return iv
+    }()
+    
+    private let titleRowStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.spacing = 10
+        sv.alignment = .top
+        return sv
+    }()
+    
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.numberOfLines = 0
@@ -75,12 +94,30 @@ final class MainCell: UITableViewCell, CellProtocol {
         return button
     }()
     
-    private let dateLabel: UILabel = {
-        let label = UILabel()
-        label.textColor = .appTextSecondary
-        label.font = .preferredFont(forTextStyle: .subheadline)
+    private let dueTagLabel: PaddingLabel = {
+        let label = PaddingLabel()
+        label.insets = UIEdgeInsets(top: 4, left: 9, bottom: 4, right: 9)
+        label.font = .preferredFont(forTextStyle: .caption1)
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 1
+        label.layer.cornerRadius = 10
+        label.layer.cornerCurve = .continuous
+        label.layer.masksToBounds = true
+        label.accessibilityTraits.insert(.staticText)
+        return label
+    }()
+
+    private let timeTagLabel: PaddingLabel = {
+        let label = PaddingLabel()
+        label.insets = UIEdgeInsets(top: 4, left: 9, bottom: 4, right: 9)
+        label.font = .preferredFont(forTextStyle: .caption1)
+        label.adjustsFontForContentSizeCategory = true
+        label.numberOfLines = 1
+        label.layer.cornerRadius = 10
+        label.layer.cornerCurve = .continuous
+        label.layer.masksToBounds = true
+        label.accessibilityTraits.insert(.staticText)
+        label.isHidden = true
         return label
     }()
 
@@ -134,34 +171,34 @@ final class MainCell: UITableViewCell, CellProtocol {
         return df
     }()
     
+    private var baseSurfaceColor: UIColor = .appSurface
+    private var baseBorderColor: UIColor = .appBorder
+    private var baseShadowOpacityLight: Float = 0.08
+    private var baseShadowOpacityDark: Float = 0.16
+    
     func bind(_ item: ChalkboardItem) {
-        // Styling is data-driven so completed items can be visually distinguished (and read via VO).
-        let titleAttributes: [NSAttributedString.Key: Any] = {
-            if item.isCompleted {
-                return [
-                    .font: titleLabel.font as Any,
-                    .foregroundColor: UIColor.appTextSecondary,
-                    .strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                    .strikethroughColor: UIColor.appTextSecondary
-                ]
-            } else {
-                return [
-                    .font: titleLabel.font as Any,
-                    .foregroundColor: UIColor.appTextPrimary
-                ]
-            }
-        }()
-
-        titleLabel.attributedText = NSAttributedString(string: item.text, attributes: titleAttributes)
-        let dueDateText = Self.dateFormatter.string(from: item.date)
+        let dueState = dueVisualState(for: item)
+        applyChrome(for: item, dueState: dueState)
+        applyStatusIcon(for: item, dueState: dueState)
+        
+        titleLabel.attributedText = makeTitleAttributedText(for: item)
+        
+        let dueDateText = Self.dateFormatter.string(from: Calendar.current.startOfDay(for: item.date))
         let timeText: String? = item.dueTimeMinutes.map { minutes in
             Self.timeFormatter.string(from: Self.dateForTimePicker(minutesSinceMidnight: minutes))
         }
-        if let timeText {
-            dateLabel.text = "Due \(dueDateText) • \(timeText)"
-        } else {
-            dateLabel.text = "Due \(dueDateText)"
-        }
+        
+        let duePrefix: String = {
+            switch dueState {
+            case .completed: return "Completed"
+            case .overdue: return "Overdue"
+            case .today: return "Today"
+            case .tomorrow: return "Tomorrow"
+            case .upcoming: return "Due"
+            }
+        }()
+        let dueText: String = (dueState == .today || dueState == .tomorrow) ? "\(duePrefix) • \(dueDateText)" : "\(duePrefix) \(dueDateText)"
+        applyDueBadges(dueText: dueText, timeText: timeText, dueState: dueState)
 
         if let severity = item.prioritySeverity {
             priorityTagLabel.text = severity.title
@@ -198,27 +235,40 @@ final class MainCell: UITableViewCell, CellProtocol {
         accessibilityCustomActions = [toggleCompletedAction, showDetailsAction]
         
         containerView.translatesAutoresizingMaskIntoConstraints = false
+        statusIconView.translatesAutoresizingMaskIntoConstraints = false
+        titleRowStack.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         detailButton.translatesAutoresizingMaskIntoConstraints = false
-        dateLabel.translatesAutoresizingMaskIntoConstraints = false
+        dueTagLabel.translatesAutoresizingMaskIntoConstraints = false
+        timeTagLabel.translatesAutoresizingMaskIntoConstraints = false
         metaRowStack.translatesAutoresizingMaskIntoConstraints = false
         stackView.translatesAutoresizingMaskIntoConstraints = false
 
         contentView.addSubview(containerView)
 
-        metaRowStack.addArrangedSubview(dateLabel)
+        metaRowStack.addArrangedSubview(dueTagLabel)
+        metaRowStack.addArrangedSubview(timeTagLabel)
         metaRowStack.addArrangedSubview(priorityTagLabel)
         metaRowStack.addArrangedSubview(metaSpacerView)
         metaRowStack.addArrangedSubview(detailButton)
 
-        dateLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        dateLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        // Allow the due badge to truncate before squeezing fixed-size controls.
+        dueTagLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        dueTagLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        timeTagLabel.setContentHuggingPriority(.required, for: .horizontal)
+        timeTagLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         priorityTagLabel.setContentHuggingPriority(.required, for: .horizontal)
         priorityTagLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         detailButton.setContentHuggingPriority(.required, for: .horizontal)
         detailButton.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        stackView.addArrangedSubview(titleLabel)
+        titleRowStack.addArrangedSubview(statusIconView)
+        titleRowStack.addArrangedSubview(titleLabel)
+        
+        statusIconView.setContentHuggingPriority(.required, for: .horizontal)
+        statusIconView.setContentCompressionResistancePriority(.required, for: .horizontal)
+        
+        stackView.addArrangedSubview(titleRowStack)
         stackView.addArrangedSubview(metaRowStack)
         containerView.addSubview(stackView)
         
@@ -233,6 +283,9 @@ final class MainCell: UITableViewCell, CellProtocol {
             containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
             containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            
+            statusIconView.widthAnchor.constraint(equalToConstant: 22),
+            statusIconView.heightAnchor.constraint(equalToConstant: 22),
             
             stackView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 14),
             stackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -14),
@@ -254,7 +307,11 @@ final class MainCell: UITableViewCell, CellProtocol {
         onDetailTapped = nil
         onTitleTapped = nil
         titleLabel.attributedText = nil
-        dateLabel.text = nil
+        dueTagLabel.text = nil
+        dueTagLabel.attributedText = nil
+        timeTagLabel.text = nil
+        timeTagLabel.attributedText = nil
+        timeTagLabel.isHidden = true
         priorityTagLabel.text = nil
         accessibilityLabel = nil
         accessibilityValue = nil
@@ -324,13 +381,15 @@ final class MainCell: UITableViewCell, CellProtocol {
         metaRowStack.alignment = isAX ? .leading : .center
         metaRowStack.spacing = isAX ? 6 : 10
         metaSpacerView.isHidden = isAX
-        dateLabel.numberOfLines = isAX ? 0 : 1
+        dueTagLabel.numberOfLines = isAX ? 0 : 1
+        timeTagLabel.numberOfLines = isAX ? 0 : 1
+        titleRowStack.alignment = isAX ? .top : .top
     }
     
     private func applyChrome(highlighted: Bool) {
-        containerView.backgroundColor = highlighted ? .appElevatedSurface : .appSurface
-        containerView.layer.borderColor = UIColor.appBorder.withAlphaComponent(highlighted ? 0.55 : 1.0).cgColor
-        containerView.layer.shadowOpacity = traitCollection.userInterfaceStyle == .dark ? 0.16 : 0.08
+        containerView.backgroundColor = highlighted ? .appElevatedSurface : baseSurfaceColor
+        containerView.layer.borderColor = baseBorderColor.withAlphaComponent(highlighted ? 0.55 : 1.0).cgColor
+        containerView.layer.shadowOpacity = traitCollection.userInterfaceStyle == .dark ? baseShadowOpacityDark : baseShadowOpacityLight
     }
 
     private func handleTraitChanges(previousTraitCollection: UITraitCollection?) {
@@ -363,6 +422,199 @@ final class MainCell: UITableViewCell, CellProtocol {
 }
 
 private extension MainCell {
+    enum DueVisualState {
+        case completed
+        case overdue
+        case today
+        case tomorrow
+        case upcoming
+    }
+    
+    func dueVisualState(for item: ChalkboardItem) -> DueVisualState {
+        if item.isCompleted { return .completed }
+        
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let dueDay = cal.startOfDay(for: item.date)
+        
+        if dueDay < today { return .overdue }
+        
+        if let minutes = item.dueTimeMinutes, dueDay == today {
+            let dueDateTime = cal.date(byAdding: .minute, value: max(0, minutes), to: dueDay) ?? dueDay
+            if Date() > dueDateTime { return .overdue }
+        }
+        
+        if cal.isDate(dueDay, inSameDayAs: today) { return .today }
+        if let tomorrow = cal.date(byAdding: .day, value: 1, to: today), cal.isDate(dueDay, inSameDayAs: tomorrow) {
+            return .tomorrow
+        }
+        return .upcoming
+    }
+    
+    func applyChrome(for item: ChalkboardItem, dueState: DueVisualState) {
+        baseSurfaceColor = .appSurface
+        baseBorderColor = .appBorder
+        baseShadowOpacityLight = 0.08
+        baseShadowOpacityDark = 0.16
+        
+        if item.isCompleted {
+            baseShadowOpacityLight = 0.03
+            baseShadowOpacityDark = 0.08
+            baseBorderColor = UIColor.appBorder.withAlphaComponent(0.85)
+            baseSurfaceColor = .appSurface
+        }
+        
+        switch dueState {
+        case .overdue:
+            // Keep the frame on-brand (no red border) even when overdue.
+            baseBorderColor = UIColor.appAccent.withAlphaComponent(0.45)
+            baseShadowOpacityLight = max(baseShadowOpacityLight, 0.10)
+            baseShadowOpacityDark = max(baseShadowOpacityDark, 0.18)
+        case .today:
+            baseBorderColor = UIColor.appAccent.withAlphaComponent(0.40)
+        case .tomorrow:
+            baseBorderColor = UIColor.systemOrange.withAlphaComponent(0.28)
+        case .completed, .upcoming:
+            break
+        }
+        
+        if let severity = item.prioritySeverity, !item.isCompleted, dueState != .overdue {
+            baseBorderColor = severity.tagColor.withAlphaComponent(0.28)
+        }
+        
+        updateHighlight(highlighted: isHighlighted || isSelected, animated: false)
+    }
+    
+    func applyStatusIcon(for item: ChalkboardItem, dueState: DueVisualState) {
+        let trimmed = item.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let isChecklistLike = trimmed.contains("- [ ]") || trimmed.contains("- [x]") || trimmed.contains("- [X]")
+        let isMultiline = trimmed.contains("\n")
+        
+        let symbolName: String = {
+            if item.isCompleted { return "checkmark.circle.fill" }
+            if isChecklistLike { return "checklist" }
+            if isMultiline { return "text.alignleft" }
+            return "circle"
+        }()
+        statusIconView.image = UIImage(systemName: symbolName)
+        
+        let tint: UIColor = {
+            switch dueState {
+            case .completed: return .appTextSecondary
+            case .overdue: return .appAccentPressed
+            case .today: return .appAccent
+            case .tomorrow: return .systemOrange
+            case .upcoming:
+                if let severity = item.prioritySeverity { return severity.tagColor }
+                return .appTextSecondary
+            }
+        }()
+        statusIconView.tintColor = tint
+    }
+    
+    func makeTitleAttributedText(for item: ChalkboardItem) -> NSAttributedString {
+        let isCompleted = item.isCompleted
+        let primaryColor = isCompleted ? UIColor.appTextSecondary : UIColor.appTextPrimary
+        let secondaryColor = UIColor.appTextSecondary
+        
+        let baseFont = titleLabel.font ?? UIFont.preferredFont(forTextStyle: .headline)
+        let secondaryFont = UIFont.preferredFont(forTextStyle: .subheadline)
+        
+        let strikeStyle: Int? = isCompleted ? NSUnderlineStyle.single.rawValue : nil
+        
+        let text = item.text
+        let parts = text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+        guard parts.count > 1 else {
+            var attrs: [NSAttributedString.Key: Any] = [
+                .font: baseFont,
+                .foregroundColor: primaryColor
+            ]
+            if let strikeStyle {
+                attrs[.strikethroughStyle] = strikeStyle
+                attrs[.strikethroughColor] = primaryColor
+            }
+            return NSAttributedString(string: text, attributes: attrs)
+        }
+        
+        let result = NSMutableAttributedString()
+        for (idx, line) in parts.enumerated() {
+            if idx > 0 { result.append(NSAttributedString(string: "\n")) }
+            let isFirst = idx == 0
+            var attrs: [NSAttributedString.Key: Any] = [
+                .font: isFirst ? baseFont : secondaryFont,
+                .foregroundColor: isFirst ? primaryColor : secondaryColor
+            ]
+            if let strikeStyle {
+                attrs[.strikethroughStyle] = strikeStyle
+                attrs[.strikethroughColor] = isFirst ? primaryColor : secondaryColor
+            }
+            result.append(NSAttributedString(string: line, attributes: attrs))
+        }
+        return result
+    }
+    
+    func applyDueBadges(dueText: String, timeText: String?, dueState: DueVisualState) {
+        let dueColors: (fg: UIColor, bg: UIColor, symbol: String) = {
+            switch dueState {
+            case .completed:
+                return (.appTextSecondary, .appElevatedSurface, "checkmark")
+            case .overdue:
+                return (.appAccentPressed, UIColor.appAccent.withAlphaComponent(0.18), "calendar.badge.exclamationmark")
+            case .today:
+                return (.appAccentPressed, UIColor.appAccent.withAlphaComponent(0.16), "calendar")
+            case .tomorrow:
+                return (.systemOrange, UIColor.systemOrange.withAlphaComponent(0.16), "calendar")
+            case .upcoming:
+                return (.appTextSecondary, .appElevatedSurface, "calendar")
+            }
+        }()
+        
+        dueTagLabel.backgroundColor = dueColors.bg
+        dueTagLabel.textColor = dueColors.fg
+        dueTagLabel.attributedText = makeBadgeAttributedText(symbolName: dueColors.symbol, text: dueText, textStyle: .caption1, textColor: dueColors.fg)
+        dueTagLabel.accessibilityLabel = dueText
+        
+        guard let timeText else {
+            timeTagLabel.isHidden = true
+            timeTagLabel.attributedText = nil
+            timeTagLabel.text = nil
+            timeTagLabel.accessibilityLabel = nil
+            return
+        }
+        
+        // Match time badge styling to the due badge state.
+        let timeFg: UIColor = (dueState == .today || dueState == .overdue) ? dueColors.fg : .appTextSecondary
+        let timeBg: UIColor = (dueState == .today || dueState == .overdue) ? dueColors.bg : .appElevatedSurface
+        timeTagLabel.isHidden = false
+        timeTagLabel.backgroundColor = timeBg
+        timeTagLabel.textColor = timeFg
+        timeTagLabel.attributedText = makeBadgeAttributedText(symbolName: "clock", text: timeText, textStyle: .caption1, textColor: timeFg)
+        timeTagLabel.accessibilityLabel = "Due time \(timeText)"
+    }
+    
+    func makeBadgeAttributedText(symbolName: String, text: String, textStyle: UIFont.TextStyle, textColor: UIColor) -> NSAttributedString {
+        let font = UIFont.preferredFont(forTextStyle: textStyle)
+        let config = UIImage.SymbolConfiguration(font: font)
+        let image = UIImage(systemName: symbolName, withConfiguration: config)?
+            .withTintColor(textColor, renderingMode: .alwaysOriginal)
+        
+        let result = NSMutableAttributedString()
+        if let image {
+            let attachment = NSTextAttachment()
+            attachment.image = image
+            let height = font.capHeight
+            attachment.bounds = CGRect(x: 0, y: (font.descender), width: height, height: height)
+            result.append(NSAttributedString(attachment: attachment))
+            result.append(NSAttributedString(string: " "))
+        }
+        
+        result.append(NSAttributedString(string: text, attributes: [
+            .font: font,
+            .foregroundColor: textColor
+        ]))
+        return result
+    }
+    
     static func dateForTimePicker(minutesSinceMidnight minutes: Int) -> Date {
         let h = max(0, minutes) / 60
         let m = max(0, minutes) % 60
@@ -442,12 +694,36 @@ struct MainCell_InFile_Previews: PreviewProvider {
     static var previews: some View {
         MainCellTablePreview(items: [
             ChalkboardItem(
-                text: "This is a preview of the improved cell UI with dynamic type and better spacing.",
-                date: Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+                text: "- [ ] Buy chalk\n- [ ] Erase board\n- [ ] Refill markers",
+                date: Date(),
+                dueTimeMinutes: 9 * 60 + 30,
+                isCompleted: false,
+                prioritySeverity: .medium
+            ),
+            ChalkboardItem(
+                text: "Overdue high priority item",
+                date: Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date(),
+                dueTimeMinutes: 8 * 60,
+                isCompleted: false,
+                prioritySeverity: .high
+            ),
+            ChalkboardItem(
+                text: "Multi-line note style\nSecond line is treated as a detail preview.\nThird line too.",
+                date: Calendar.current.date(byAdding: .day, value: 3, to: Date()) ?? Date(),
+                dueTimeMinutes: nil,
+                isCompleted: false,
+                prioritySeverity: .low
+            ),
+            ChalkboardItem(
+                text: "Completed item (muted)",
+                date: Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date(),
+                dueTimeMinutes: nil,
+                isCompleted: true,
+                prioritySeverity: nil
             )
         ])
         .previewLayout(.sizeThatFits)
-        .frame(width: 390, height: 200)
+        .frame(width: 390, height: 420)
         .padding()
         .previewDisplayName("Main Cell")
     }
