@@ -385,6 +385,10 @@ extension MainController: InputHeightProtocol {
 }
 
 extension MainController: UITextViewDelegate {
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        textView.applyMarkdownListContinuationIfNeeded(in: range, replacementText: text)
+    }
+
     func textViewDidChange(_ textView: UITextView) {
         input()
     }

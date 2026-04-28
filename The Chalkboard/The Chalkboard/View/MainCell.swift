@@ -20,6 +20,21 @@ final class MainCell: UITableViewCell, CellProtocol {
     var onDetailTapped: ((MainCell) -> Void)?
     var onTitleTapped: ((MainCell) -> Void)?
     
+    private lazy var toggleCompletedAction = UIAccessibilityCustomAction(
+        name: "Toggle completed",
+        target: self,
+        selector: #selector(accessibilityToggleCompleted)
+    )
+    
+    private lazy var showDetailsAction = UIAccessibilityCustomAction(
+        name: "Show details",
+        target: self,
+        selector: #selector(accessibilityShowDetails)
+    )
+    
+    private lazy var detailFeedback = UIImpactFeedbackGenerator(style: .light)
+    private lazy var titleFeedback = UISelectionFeedbackGenerator()
+    
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .appSurface
@@ -34,9 +49,6 @@ final class MainCell: UITableViewCell, CellProtocol {
         view.layer.shadowOpacity = 0.08
         view.layer.shadowRadius = 10
         view.layer.shadowOffset = CGSize(width: 0, height: 6)
-        // Shadows are expensive during fast table scrolling; rasterize this layer to reduce cost.
-        view.layer.shouldRasterize = true
-        view.layer.rasterizationScale = UIScreen.main.scale
         return view
     }()
     
@@ -59,6 +71,7 @@ final class MainCell: UITableViewCell, CellProtocol {
         configuration.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
         button.configuration = configuration
         button.accessibilityLabel = "Show item details"
+        button.accessibilityHint = "Opens the details sheet for this item."
         return button
     }()
     
@@ -90,6 +103,13 @@ final class MainCell: UITableViewCell, CellProtocol {
         sv.spacing = 10
         sv.alignment = .center
         return sv
+    }()
+    
+    private let metaSpacerView: UIView = {
+        let view = UIView()
+        view.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return view
     }()
     
     private let stackView: UIStackView = {
@@ -155,14 +175,17 @@ final class MainCell: UITableViewCell, CellProtocol {
             priorityTagLabel.accessibilityLabel = "Priority None"
         }
 
-        let priorityText = item.prioritySeverity.map { ". Priority \($0.title)" } ?? ""
-        let dueTimeVO: String = timeText.map { ". Due at \($0)" } ?? ""
+        accessibilityLabel = item.text
         
-        if item.isCompleted {
-            accessibilityLabel = "\(item.text). Completed\(priorityText). Due \(dueDateText)\(dueTimeVO)"
+        var valueParts: [String] = []
+        valueParts.append(item.isCompleted ? "Completed" : "Not completed")
+        if let severity = item.prioritySeverity {
+            valueParts.append("Priority \(severity.title)")
         } else {
-            accessibilityLabel = "\(item.text)\(priorityText). Due \(dueDateText)\(dueTimeVO)"
+            valueParts.append("Priority None")
         }
+        valueParts.append(timeText == nil ? "Due \(dueDateText)" : "Due \(dueDateText), \(timeText!)")
+        accessibilityValue = valueParts.joined(separator: ", ")
     }
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -170,6 +193,9 @@ final class MainCell: UITableViewCell, CellProtocol {
         selectionStyle = .none
         backgroundColor = .clear
         contentView.backgroundColor = .clear
+        accessibilityTraits.insert(.button)
+        accessibilityHint = "Double-tap to toggle completed. Swipe up or down for more actions."
+        accessibilityCustomActions = [toggleCompletedAction, showDetailsAction]
         
         containerView.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -180,13 +206,9 @@ final class MainCell: UITableViewCell, CellProtocol {
 
         contentView.addSubview(containerView)
 
-        let spacer = UIView()
-        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-
         metaRowStack.addArrangedSubview(dateLabel)
         metaRowStack.addArrangedSubview(priorityTagLabel)
-        metaRowStack.addArrangedSubview(spacer)
+        metaRowStack.addArrangedSubview(metaSpacerView)
         metaRowStack.addArrangedSubview(detailButton)
 
         dateLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -203,8 +225,7 @@ final class MainCell: UITableViewCell, CellProtocol {
         detailButton.addTarget(self, action: #selector(didTapDetail), for: .touchUpInside)
         
         titleLabel.isUserInteractionEnabled = true
-        // Treat the title as the primary action (toggle completed) to keep tapping ergonomic.
-        titleLabel.accessibilityTraits.insert(.button)
+        titleLabel.isAccessibilityElement = false
         titleLabel.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapTitle)))
         
         NSLayoutConstraint.activate([
@@ -218,6 +239,10 @@ final class MainCell: UITableViewCell, CellProtocol {
             stackView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 12),
             stackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12)
         ])
+        
+        updateLayoutForContentSizeCategory()
+        updateHighlight(highlighted: false, animated: false)
+        registerForTraitChangesIfAvailable()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -228,9 +253,12 @@ final class MainCell: UITableViewCell, CellProtocol {
         super.prepareForReuse()
         onDetailTapped = nil
         onTitleTapped = nil
-        titleLabel.text = ""
-        dateLabel.text = ""
-        priorityTagLabel.text = ""
+        titleLabel.attributedText = nil
+        dateLabel.text = nil
+        priorityTagLabel.text = nil
+        accessibilityLabel = nil
+        accessibilityValue = nil
+        updateHighlight(highlighted: false, animated: false)
     }
 
     override func layoutSubviews() {
@@ -254,11 +282,10 @@ final class MainCell: UITableViewCell, CellProtocol {
     
     private func updateHighlight(highlighted: Bool, animated: Bool) {
         let updates = {
-            self.containerView.backgroundColor = highlighted ? .appElevatedSurface : .appSurface
-            self.containerView.layer.borderColor = UIColor.appBorder.withAlphaComponent(highlighted ? 0.55 : 1.0).cgColor
+            self.applyChrome(highlighted: highlighted)
         }
         
-        if animated {
+        if animated && !UIAccessibility.isReduceMotionEnabled {
             UIView.animate(withDuration: 0.15, delay: 0, options: [.beginFromCurrentState, .curveEaseInOut], animations: updates)
         } else {
             updates()
@@ -266,11 +293,72 @@ final class MainCell: UITableViewCell, CellProtocol {
     }
     
     @objc private func didTapDetail() {
+        detailFeedback.prepare()
+        detailFeedback.impactOccurred()
         onDetailTapped?(self)
     }
     
     @objc private func didTapTitle() {
+        titleFeedback.prepare()
+        titleFeedback.selectionChanged()
         onTitleTapped?(self)
+    }
+    
+    @available(iOS, deprecated: 17.0)
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+
+        // On iOS 17+, trait changes are handled via registration APIs.
+        if #available(iOS 17.0, *) { return }
+        handleTraitChanges(previousTraitCollection: previousTraitCollection)
+    }
+    
+    override func accessibilityActivate() -> Bool {
+        didTapTitle()
+        return true
+    }
+    
+    private func updateLayoutForContentSizeCategory() {
+        let isAX = traitCollection.preferredContentSizeCategory.isAccessibilityCategory
+        metaRowStack.axis = isAX ? .vertical : .horizontal
+        metaRowStack.alignment = isAX ? .leading : .center
+        metaRowStack.spacing = isAX ? 6 : 10
+        metaSpacerView.isHidden = isAX
+        dateLabel.numberOfLines = isAX ? 0 : 1
+    }
+    
+    private func applyChrome(highlighted: Bool) {
+        containerView.backgroundColor = highlighted ? .appElevatedSurface : .appSurface
+        containerView.layer.borderColor = UIColor.appBorder.withAlphaComponent(highlighted ? 0.55 : 1.0).cgColor
+        containerView.layer.shadowOpacity = traitCollection.userInterfaceStyle == .dark ? 0.16 : 0.08
+    }
+
+    private func handleTraitChanges(previousTraitCollection: UITraitCollection?) {
+        if previousTraitCollection?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+            updateLayoutForContentSizeCategory()
+        }
+
+        if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
+            updateHighlight(highlighted: isHighlighted || isSelected, animated: false)
+        }
+    }
+
+    private func registerForTraitChangesIfAvailable() {
+        guard #available(iOS 17.0, *) else { return }
+
+        registerForTraitChanges([UITraitPreferredContentSizeCategory.self, UITraitUserInterfaceStyle.self]) { (cell: MainCell, previousTraitCollection: UITraitCollection) in
+            cell.handleTraitChanges(previousTraitCollection: previousTraitCollection)
+        }
+    }
+    
+    @objc private func accessibilityToggleCompleted() -> Bool {
+        didTapTitle()
+        return true
+    }
+    
+    @objc private func accessibilityShowDetails() -> Bool {
+        didTapDetail()
+        return true
     }
 }
 

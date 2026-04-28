@@ -874,6 +874,10 @@ private final class ChipView: UIView {
 }
 
 extension ItemDetailSheetViewController: UITextViewDelegate {
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        textView.applyMarkdownListContinuationIfNeeded(in: range, replacementText: text)
+    }
+
     func textViewDidChange(_ textView: UITextView) {
         draftText = textView.text ?? ""
         updateItemTitleEditorHeight(animated: false)
