@@ -162,6 +162,41 @@ class MainController: UIViewController {
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
         view.endEditing(true)
 
+        let parsed = NaturalLanguageReminderParser.parse(inputText)
+        if let dueDate = parsed.dueDate {
+            let title = parsed.cleanedText.isEmpty ? "Reminder" : parsed.cleanedText
+            inputTextView.text = ""
+            input()
+
+            do {
+                let newItem = try itemStore.create(
+                    text: title,
+                    date: dueDate,
+                    dueTimeMinutes: parsed.dueTimeMinutes,
+                    isCompleted: false,
+                    prioritySeverity: nil
+                )
+                LocalNotificationScheduler.shared.rescheduleDueNotification(for: newItem)
+                let newIndex = itemViewModel.items.count
+                itemViewModel.items.append(newItem)
+                applyViewState()
+
+                let indexPath = IndexPath(row: newIndex, section: 0)
+                DispatchQueue.main.async {
+                    self.tableView.performBatchUpdates {
+                        self.tableView.insertRows(at: [indexPath], with: .automatic)
+                    } completion: { _ in
+                        self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    }
+                }
+            } catch {
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+                assertionFailure("Failed to create item: \(error)")
+            }
+            return
+        }
+
         // Due date/time is user-controlled, so we collect it up-front (before persisting).
         presentDatePicker(title: "Due date", initialDate: Date(), initialDueTimeMinutes: nil) { [weak self] selectedDate, selectedDueTimeMinutes, selectedPriority in
             guard let self else { return }

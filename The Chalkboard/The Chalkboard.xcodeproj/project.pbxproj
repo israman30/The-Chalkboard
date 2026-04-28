@@ -10,6 +10,7 @@
 		017B63B6617F85B5019F3AFB /* UIKitPreviews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 257DBE297FDA5C69A575F667 /* UIKitPreviews.swift */; };
 		4D0943DD29BD7BA600C40E27 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0943DC29BD7BA600C40E27 /* MainView.swift */; };
 		4D0943E029BD7C0900C40E27 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D0943DF29BD7C0900C40E27 /* Utils.swift */; };
+		4D9E5B6C7D8E9F0011223345 /* NaturalLanguageReminderParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D9E5B6C7D8E9F0011223344 /* NaturalLanguageReminderParser.swift */; };
 		4D7DD1722F9C5B9100A5F6C1 /* ChalkboardItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD1712F9C5B8000A5F6C1 /* ChalkboardItem.swift */; };
 		4D7DD1752F9C5BE700A5F6C1 /* MainCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD1742F9C5BE700A5F6C1 /* MainCell.swift */; };
 		4D7DD1772F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D7DD1762F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift */; };
@@ -53,6 +54,7 @@
 		257DBE297FDA5C69A575F667 /* UIKitPreviews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitPreviews.swift; sourceTree = "<group>"; };
 		4D0943DC29BD7BA600C40E27 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 		4D0943DF29BD7C0900C40E27 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		4D9E5B6C7D8E9F0011223344 /* NaturalLanguageReminderParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NaturalLanguageReminderParser.swift; sourceTree = "<group>"; };
 		4D7DD1712F9C5B8000A5F6C1 /* ChalkboardItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChalkboardItem.swift; sourceTree = "<group>"; };
 		4D7DD1742F9C5BE700A5F6C1 /* MainCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainCell.swift; sourceTree = "<group>"; };
 		4D7DD1762F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerSheetViewController.swift; sourceTree = "<group>"; };
@@ -119,6 +121,7 @@
 			isa = PBXGroup;
 			children = (
 				4D0943DF29BD7C0900C40E27 /* Utils.swift */,
+				4D9E5B6C7D8E9F0011223344 /* NaturalLanguageReminderParser.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -358,6 +361,7 @@
 			files = (
 				A0C1D2E3F4A5B6C7D8E9F104 /* ChalkboardModel.xcdatamodeld in Sources */,
 				4D0943E029BD7C0900C40E27 /* Utils.swift in Sources */,
+				4D9E5B6C7D8E9F0011223345 /* NaturalLanguageReminderParser.swift in Sources */,
 				4D7DD1722F9C5B9100A5F6C1 /* ChalkboardItem.swift in Sources */,
 				4D7DD1772F9C5C1200A5F6C1 /* DatePickerSheetViewController.swift in Sources */,
 				4D7DD17B2F9C60A100A5F6C1 /* EditItemSheetViewController.swift in Sources */,

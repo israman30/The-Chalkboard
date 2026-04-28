@@ -130,6 +130,16 @@ final class ItemDetailSheetViewController: UIViewController {
 
     @objc private func didTapSave() {
         // Treat whitespace-only edits as empty so we don’t persist “invisible” titles.
+        let candidate = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let parsed = NaturalLanguageReminderParser.parse(candidate)
+        if let parsedDate = parsed.dueDate {
+            draftDate = parsedDate
+            if let minutes = parsed.dueTimeMinutes {
+                draftDueTimeMinutes = minutes
+            }
+            draftText = parsed.cleanedText.isEmpty ? "Reminder" : parsed.cleanedText
+        }
+
         let trimmed = draftText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
@@ -612,6 +622,11 @@ private extension ItemDetailSheetViewController {
 
     func applyItemToUI(animated: Bool) {
         let updates = {
+            self.datePicker.date = self.draftDate
+            if let minutes = self.draftDueTimeMinutes {
+                self.timePicker.date = Self.dateForTimePicker(minutesSinceMidnight: minutes)
+            }
+
             let dueDateText = Self.dateFormatter.string(from: self.draftDate)
             self.dateChip.configure(
                 text: "Due \(dueDateText)",

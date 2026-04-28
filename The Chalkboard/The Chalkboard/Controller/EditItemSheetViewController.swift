@@ -147,11 +147,19 @@ final class EditItemSheetViewController: UIViewController {
     @objc private func didTapSave() {
         let trimmed = (textField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
-        let picked = Calendar.current.startOfDay(for: datePicker.date)
-        let minutes: Int? = timeToggle.isOn ? Self.minutesSinceMidnight(from: timePicker.date) : nil
+        let parsed = NaturalLanguageReminderParser.parse(trimmed)
+        let picked = parsed.dueDate ?? Calendar.current.startOfDay(for: datePicker.date)
+        let minutes: Int? = {
+            if let parsedMinutes = parsed.dueTimeMinutes { return parsedMinutes }
+            return timeToggle.isOn ? Self.minutesSinceMidnight(from: timePicker.date) : nil
+        }()
+        let finalText = {
+            guard parsed.dueDate != nil else { return trimmed }
+            return parsed.cleanedText.isEmpty ? "Reminder" : parsed.cleanedText
+        }()
         // Fire the save callback after the sheet is dismissed to keep transitions clean.
         dismiss(animated: true) { [onSave] in
-            onSave(trimmed, picked, minutes)
+            onSave(finalText, picked, minutes)
         }
     }
 }
