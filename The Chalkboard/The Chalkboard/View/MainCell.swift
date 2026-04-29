@@ -38,7 +38,7 @@ final class MainCell: UITableViewCell, CellProtocol {
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .appSurface
-        view.layer.cornerRadius = 14
+        view.layer.cornerRadius = 5
         if #available(iOS 13.0, *) {
             view.layer.cornerCurve = .continuous
         }
